@@ -93,7 +93,9 @@ impl Translator {
         expr: &Expr,
     ) -> Result<OpenHypergraph<HObject, HOperation>, TranslationError> {
         let mut graph = OpenHypergraph::empty();
-        let (_inputs, _outputs) = self.translate_expr(expr, &mut graph)?;
+        let (sources, targets) = self.translate_expr(expr, &mut graph)?;
+        graph.sources = sources;
+        graph.targets = targets;
         Ok(graph)
     }
 
@@ -260,16 +262,6 @@ impl Translator {
         }
         Ok(())
     }
-}
-
-pub fn translate_expr(
-    expr: &Expr,
-) -> Result<OpenHypergraph<HObject, HOperation>, TranslationError> {
-    // For backward compatibility, use empty signatures (unknown operations will cause errors)
-    // Consider using translate_expr_with_signatures instead for proper operation support
-    let signatures = HashMap::new();
-    let mut translator = Translator::new(signatures);
-    translator.translate(expr)
 }
 
 pub fn translate_expr_with_signatures(
