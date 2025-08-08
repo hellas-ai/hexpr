@@ -1,0 +1,33 @@
+WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
+COMMENT = _{ "//" ~ (!"\n" ~ ANY)* }
+
+program = { SOI ~ expr ~ EOI }
+
+expr = {
+    composition
+  | tensor
+  | frobenius
+  | operation
+}
+
+composition = { "(" ~ expr+ ~ ")" }
+
+tensor = { "{" ~ expr+ ~ "}" }
+
+frobenius = {
+    frobenius_full
+  | frobenius_identity
+}
+
+frobenius_full = { "[" ~ variable* ~ dot ~ variable* ~ "]" }
+dot = { "." }
+frobenius_identity = { "[" ~ variable+ ~ "]" }
+
+operation = { name }
+
+variable = {
+    name
+  | "_"
+}
+
+name = @{ (ASCII_ALPHANUMERIC | "+" | "-" | "*" | "/" | "\\") ~ (ASCII_ALPHANUMERIC | "_" | "-" | "+" | "*" | "/" | "\\")* }

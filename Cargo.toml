@@ -1,0 +1,9 @@
+[package]
+name = "h-exprs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+pest = "2.7"
+pest_derive = "2.1"
+clap = "4.0"
