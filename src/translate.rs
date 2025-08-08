@@ -3,23 +3,29 @@ use open_hypergraphs::lax::{Hyperedge, NodeId, OpenHypergraph};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct HObject(pub String);
+pub enum HObject {
+    Unknown,
+    Named(String),
+}
 
 impl std::fmt::Display for HObject {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        match self {
+            HObject::Unknown => write!(f, "?"),
+            HObject::Named(name) => write!(f, "{}", name),
+        }
     }
 }
 
 impl From<String> for HObject {
     fn from(s: String) -> Self {
-        HObject(s)
+        HObject::Named(s)
     }
 }
 
 impl From<&str> for HObject {
     fn from(s: &str) -> Self {
-        HObject(s.to_string())
+        HObject::Named(s.to_string())
     }
 }
 
@@ -71,7 +77,6 @@ impl<O> OperationSignature<O> {
 
 pub struct Translator {
     variables: HashMap<String, NodeId>,
-    anonymous_counter: usize,
     operation_signatures: HashMap<String, OperationSignature<HObject>>,
 }
 
@@ -79,7 +84,6 @@ impl Translator {
     pub fn new(signatures: HashMap<String, OperationSignature<HObject>>) -> Self {
         Self {
             variables: HashMap::new(),
-            anonymous_counter: 0,
             operation_signatures: signatures,
         }
     }
@@ -156,30 +160,41 @@ impl Translator {
         outputs: &[Variable],
         graph: &mut OpenHypergraph<HObject, HOperation>,
     ) -> Result<(Vec<NodeId>, Vec<NodeId>), TranslationError> {
-        // Create nodes for inputs and outputs
-        let input_nodes: Vec<NodeId> = inputs
-            .iter()
-            .map(|_| graph.new_node(HObject::from("obj")))
-            .collect();
-        let output_nodes: Vec<NodeId> = outputs
-            .iter()
-            .map(|_| graph.new_node(HObject::from("obj")))
-            .collect();
+        // Frobenius relations create pure unification structures without operations
+        // For [x x . x]: create 3 nodes, then unify them all via the quotient map
 
-        // Create a frobenius relation edge
-        let relation_name = format!("frobenius_{}_{}", inputs.len(), outputs.len());
-        let interface = Hyperedge {
-            sources: input_nodes.clone(),
-            targets: output_nodes.clone(),
-        };
+        let input_nodes = self.process_frobenius_variables(inputs, graph);
+        let output_nodes = self.process_frobenius_variables(outputs, graph);
 
-        graph.new_edge(HOperation::from(relation_name), interface);
-
-        // Handle variable unification through the quotient map
-        self.unify_variables(inputs, &input_nodes, graph)?;
-        self.unify_variables(outputs, &output_nodes, graph)?;
-
+        // No operation edge created - this is pure structural unification
         Ok((input_nodes, output_nodes))
+    }
+
+    fn process_frobenius_variables(
+        &mut self,
+        variables: &[Variable],
+        graph: &mut OpenHypergraph<HObject, HOperation>,
+    ) -> Vec<NodeId> {
+        variables
+            .iter()
+            .map(|var| match var {
+                Variable::Named(name) => {
+                    if let Some(&existing_node) = self.variables.get(name) {
+                        // Variable already exists - reuse its node (creates unification)
+                        existing_node
+                    } else {
+                        // First occurrence of this variable - create new node with Unknown type
+                        let new_node = graph.new_node(HObject::Unknown);
+                        self.variables.insert(name.clone(), new_node);
+                        new_node
+                    }
+                }
+                Variable::Anonymous => {
+                    // Anonymous variables get fresh nodes each time
+                    graph.new_node(HObject::Unknown)
+                }
+            })
+            .collect()
     }
 
     fn translate_composition(
@@ -235,32 +250,6 @@ impl Translator {
         }
 
         Ok((all_inputs, all_outputs))
-    }
-
-    fn unify_variables(
-        &mut self,
-        variables: &[Variable],
-        nodes: &[NodeId],
-        graph: &mut OpenHypergraph<HObject, HOperation>,
-    ) -> Result<(), TranslationError> {
-        for (var, &node) in variables.iter().zip(nodes.iter()) {
-            match var {
-                Variable::Named(name) => {
-                    if let Some(&existing_node) = self.variables.get(name) {
-                        // Unify with existing node for this variable name
-                        graph.unify(node, existing_node);
-                    } else {
-                        // First occurrence of this variable name
-                        self.variables.insert(name.clone(), node);
-                    }
-                }
-                Variable::Anonymous => {
-                    // Anonymous variables don't get unified across expressions
-                    self.anonymous_counter += 1;
-                }
-            }
-        }
-        Ok(())
     }
 }
 
@@ -319,8 +308,11 @@ mod tests {
 
     #[test]
     fn test_translate_frobenius_join() {
+        use std::collections::HashMap;
+
         let expr = HExprParser::parse_expr("[x x . x]").unwrap();
-        let result = translate_expr(&expr);
+        let signatures = HashMap::new(); // Empty signatures for pure frobenius
+        let result = translate_expr_with_signatures(&expr, signatures);
         assert!(result.is_ok());
     }
 
