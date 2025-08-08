@@ -2,7 +2,10 @@
 pub enum Expr {
     Composition(Vec<Expr>),
     Tensor(Vec<Expr>),
-    Frobenius { inputs: Vec<Variable>, outputs: Vec<Variable> },
+    Frobenius {
+        inputs: Vec<Variable>,
+        outputs: Vec<Variable>,
+    },
     Operation(String),
 }
 

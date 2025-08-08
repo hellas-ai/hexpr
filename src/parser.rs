@@ -1,6 +1,6 @@
+use crate::ast::{Expr, Variable};
 use pest::Parser;
 use pest_derive::Parser;
-use crate::ast::{Expr, Variable};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
@@ -22,17 +22,11 @@ fn build_expr(pair: pest::iterators::Pair<Rule>) -> Expr {
             build_expr(inner)
         }
         Rule::composition => {
-            let exprs = pair
-                .into_inner()
-                .map(build_expr)
-                .collect();
+            let exprs = pair.into_inner().map(build_expr).collect();
             Expr::Composition(exprs)
         }
         Rule::tensor => {
-            let exprs = pair
-                .into_inner()
-                .map(build_expr)
-                .collect();
+            let exprs = pair.into_inner().map(build_expr).collect();
             Expr::Tensor(exprs)
         }
         Rule::frobenius => {
@@ -43,7 +37,7 @@ fn build_expr(pair: pest::iterators::Pair<Rule>) -> Expr {
                     let mut inputs = Vec::new();
                     let mut outputs = Vec::new();
                     let mut parsing_outputs = false;
-                    
+
                     for var_pair in variables {
                         match var_pair.as_rule() {
                             Rule::dot => {
@@ -60,28 +54,25 @@ fn build_expr(pair: pest::iterators::Pair<Rule>) -> Expr {
                             _ => {}
                         }
                     }
-                    
+
                     Expr::Frobenius { inputs, outputs }
                 }
                 Rule::frobenius_identity => {
-                    let variables: Vec<Variable> = inner
-                        .into_inner()
-                        .map(build_variable)
-                        .collect();
-                    
+                    let variables: Vec<Variable> = inner.into_inner().map(build_variable).collect();
+
                     Expr::Frobenius {
                         inputs: variables.clone(),
                         outputs: variables,
                     }
                 }
-                _ => unreachable!()
+                _ => unreachable!(),
             }
         }
         Rule::operation => {
             let name = pair.into_inner().next().unwrap().as_str();
             Expr::Operation(name.to_string())
         }
-        _ => unreachable!()
+        _ => unreachable!(),
     }
 }
 
@@ -98,7 +89,7 @@ fn build_variable(pair: pest::iterators::Pair<Rule>) -> Variable {
                 }
             }
         }
-        _ => unreachable!()
+        _ => unreachable!(),
     }
 }
 
@@ -130,7 +121,10 @@ mod tests {
         assert_eq!(
             result,
             Expr::Frobenius {
-                inputs: vec![Variable::Named("x".to_string()), Variable::Named("x".to_string())],
+                inputs: vec![
+                    Variable::Named("x".to_string()),
+                    Variable::Named("x".to_string())
+                ],
                 outputs: vec![Variable::Named("x".to_string())],
             }
         );

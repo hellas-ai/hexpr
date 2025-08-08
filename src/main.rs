@@ -1,6 +1,55 @@
 use clap::{Arg, Command};
-use h_exprs::HExprParser;
-use std::io::{self, Read};
+use h_exprs::{
+    to_svg, translate::HObject, translate_expr_with_signatures, HExprParser, OperationSignature,
+};
+use std::collections::HashMap;
+use std::io::{self, Read, Write};
+
+fn create_default_signatures() -> HashMap<String, OperationSignature<HObject>> {
+    let mut signatures = HashMap::new();
+
+    let obj = HObject::from("ℝ"); // Using ℝ (real numbers) as the default object type
+
+    // Binary operations: 2 → 1
+    signatures.insert(
+        "+".to_string(),
+        OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
+    );
+    signatures.insert(
+        "-".to_string(),
+        OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
+    );
+    signatures.insert(
+        "*".to_string(),
+        OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
+    );
+    signatures.insert(
+        "/".to_string(),
+        OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
+    );
+
+    // Unary operations: 1 → 1
+    signatures.insert(
+        "neg".to_string(),
+        OperationSignature::new(vec![obj.clone()], vec![obj.clone()]),
+    );
+
+    // Structural operations
+    signatures.insert(
+        "copy".to_string(),
+        OperationSignature::new(vec![obj.clone()], vec![obj.clone(), obj.clone()]),
+    ); // 1 → 2
+    signatures.insert(
+        "discard".to_string(),
+        OperationSignature::new(vec![obj.clone()], vec![]),
+    ); // 1 → 0
+    signatures.insert(
+        "create".to_string(),
+        OperationSignature::new(vec![], vec![obj.clone()]),
+    ); // 0 → 1
+
+    signatures
+}
 
 fn main() {
     let matches = Command::new("h-exprs")
@@ -26,11 +75,27 @@ fn main() {
                 .action(clap::ArgAction::SetTrue)
                 .help("Show debug AST representation"),
         )
+        .arg(
+            Arg::new("translate")
+                .short('t')
+                .long("translate")
+                .action(clap::ArgAction::SetTrue)
+                .help("Translate to open hypergraph representation"),
+        )
+        .arg(
+            Arg::new("visualize")
+                .short('v')
+                .long("visualize")
+                .action(clap::ArgAction::SetTrue)
+                .help("Generate DOT visualization of the open hypergraph"),
+        )
         .get_matches();
 
     let input = matches.get_one::<String>("INPUT").unwrap();
     let pretty = matches.get_flag("pretty");
     let debug = matches.get_flag("debug");
+    let translate = matches.get_flag("translate");
+    let visualize = matches.get_flag("visualize");
 
     let expr_str = if input == "-" {
         let mut buffer = String::new();
@@ -46,6 +111,34 @@ fn main() {
         Ok(expr) => {
             if debug {
                 println!("Debug AST: {:#?}", expr);
+            } else if visualize {
+                let signatures = create_default_signatures();
+                match translate_expr_with_signatures(&expr, signatures) {
+                    Ok(hypergraph) => match to_svg(&hypergraph) {
+                        Ok(svg_bytes) => {
+                            io::stdout().write_all(&svg_bytes).unwrap();
+                        }
+                        Err(e) => {
+                            eprintln!("SVG generation error: {}", e);
+                            std::process::exit(1);
+                        }
+                    },
+                    Err(e) => {
+                        eprintln!("Translation error: {}", e);
+                        std::process::exit(1);
+                    }
+                }
+            } else if translate {
+                let signatures = create_default_signatures();
+                match translate_expr_with_signatures(&expr, signatures) {
+                    Ok(hypergraph) => {
+                        println!("Open Hypergraph: {:#?}", hypergraph);
+                    }
+                    Err(e) => {
+                        eprintln!("Translation error: {}", e);
+                        std::process::exit(1);
+                    }
+                }
             } else if pretty {
                 println!("Parsed: {}", expr);
             } else {
