@@ -65,6 +65,12 @@ fn build_expr(pair: pest::iterators::Pair<Rule>) -> Expr {
                         outputs: variables,
                     }
                 }
+                Rule::frobenius_empty => {
+                    Expr::Frobenius {
+                        inputs: Vec::new(),
+                        outputs: Vec::new(),
+                    }
+                }
                 _ => unreachable!(),
             }
         }
@@ -151,6 +157,18 @@ mod tests {
                 Expr::Operation("add".to_string()),
                 Expr::Operation("sub".to_string()),
             ])
+        );
+    }
+
+    #[test]
+    fn test_frobenius_empty() {
+        let result = HExprParser::parse_expr("[]").unwrap();
+        assert_eq!(
+            result,
+            Expr::Frobenius {
+                inputs: vec![],
+                outputs: vec![],
+            }
         );
     }
 }

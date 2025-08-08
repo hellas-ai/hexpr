@@ -80,7 +80,7 @@ mod tests {
         );
 
         // Parse an expression that mixes frobenius (Unknown) with operations (Named)
-        let expr = HExprParser::parse_expr("([x] +)").unwrap();
+        let expr = HExprParser::parse_expr("([x . x x] +)").unwrap();
         let mut graph = translate_expr_with_signatures(&expr, signatures).unwrap();
 
         // Before propagation, we should have both Unknown and Named nodes

@@ -60,21 +60,26 @@ impl std::fmt::Display for Expr {
                 write!(f, "}}")
             }
             Expr::Frobenius { inputs, outputs } => {
-                write!(f, "[")?;
-                for (i, var) in inputs.iter().enumerate() {
-                    if i > 0 {
-                        write!(f, " ")?;
+                // Special case for empty frobenius
+                if inputs.is_empty() && outputs.is_empty() {
+                    write!(f, "[]")
+                } else {
+                    write!(f, "[")?;
+                    for (i, var) in inputs.iter().enumerate() {
+                        if i > 0 {
+                            write!(f, " ")?;
+                        }
+                        write!(f, "{}", var)?;
                     }
-                    write!(f, "{}", var)?;
-                }
-                write!(f, " . ")?;
-                for (i, var) in outputs.iter().enumerate() {
-                    if i > 0 {
-                        write!(f, " ")?;
+                    write!(f, " . ")?;
+                    for (i, var) in outputs.iter().enumerate() {
+                        if i > 0 {
+                            write!(f, " ")?;
+                        }
+                        write!(f, "{}", var)?;
                     }
-                    write!(f, "{}", var)?;
+                    write!(f, "]")
                 }
-                write!(f, "]")
             }
             Expr::Operation(name) => write!(f, "{}", name),
         }
