@@ -11,14 +11,14 @@ use std::io::{self, Read, Write};
 fn apply_quotient_if_needed(
     mut hypergraph: OpenHypergraph<HObject, HOperation>,
     quotient: bool,
-) -> OpenHypergraph<HObject, HOperation> {
+) -> Result<OpenHypergraph<HObject, HOperation>, h_exprs::translate::TranslationError> {
     if quotient {
         // First propagate object labels to resolve Unknown/Known conflicts
-        propagate_object_labels(&mut hypergraph);
+        propagate_object_labels(&mut hypergraph)?;
         // Then apply quotient
         hypergraph.quotient();
     }
-    hypergraph
+    Ok(hypergraph)
 }
 
 fn create_default_signatures() -> HashMap<String, OperationSignature<HObject>> {
@@ -63,6 +63,18 @@ fn create_default_signatures() -> HashMap<String, OperationSignature<HObject>> {
         "create".to_string(),
         OperationSignature::new(vec![], vec![obj.clone()]),
     ); // 0 → 1
+
+    signatures.insert(
+        "nat/zero".to_string(),
+        OperationSignature::new(vec![], vec![HObject::from("ℕ")]),
+    );
+    signatures.insert(
+        "nat/add".to_string(),
+        OperationSignature::new(
+            vec![HObject::from("ℕ"), HObject::from("ℕ")],
+            vec![HObject::from("ℕ")],
+        ),
+    );
 
     signatures
 }
@@ -138,9 +150,8 @@ fn main() {
             } else if visualize {
                 let signatures = create_default_signatures();
                 match translate_expr_with_signatures(&expr, signatures) {
-                    Ok(hypergraph) => {
-                        let processed_hypergraph = apply_quotient_if_needed(hypergraph, quotient);
-                        match to_svg(&processed_hypergraph) {
+                    Ok(hypergraph) => match apply_quotient_if_needed(hypergraph, quotient) {
+                        Ok(processed_hypergraph) => match to_svg(&processed_hypergraph) {
                             Ok(svg_bytes) => {
                                 io::stdout().write_all(&svg_bytes).unwrap();
                             }
@@ -148,8 +159,12 @@ fn main() {
                                 eprintln!("SVG generation error: {}", e);
                                 std::process::exit(1);
                             }
+                        },
+                        Err(e) => {
+                            eprintln!("Type inference error: {}", e);
+                            std::process::exit(1);
                         }
-                    }
+                    },
                     Err(e) => {
                         eprintln!("Translation error: {}", e);
                         std::process::exit(1);
@@ -158,10 +173,15 @@ fn main() {
             } else if translate {
                 let signatures = create_default_signatures();
                 match translate_expr_with_signatures(&expr, signatures) {
-                    Ok(hypergraph) => {
-                        let processed_hypergraph = apply_quotient_if_needed(hypergraph, quotient);
-                        println!("Open Hypergraph: {:#?}", processed_hypergraph);
-                    }
+                    Ok(hypergraph) => match apply_quotient_if_needed(hypergraph, quotient) {
+                        Ok(processed_hypergraph) => {
+                            println!("Open Hypergraph: {:#?}", processed_hypergraph);
+                        }
+                        Err(e) => {
+                            eprintln!("Type inference error: {}", e);
+                            std::process::exit(1);
+                        }
+                    },
                     Err(e) => {
                         eprintln!("Translation error: {}", e);
                         std::process::exit(1);
