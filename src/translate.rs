@@ -189,10 +189,6 @@ impl Translator {
                         new_node
                     }
                 }
-                Variable::Anonymous => {
-                    // Anonymous variables get fresh nodes each time
-                    graph.new_node(HObject::Unknown)
-                }
             })
             .collect()
     }

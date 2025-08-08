@@ -65,12 +65,10 @@ fn build_expr(pair: pest::iterators::Pair<Rule>) -> Expr {
                         outputs: variables,
                     }
                 }
-                Rule::frobenius_empty => {
-                    Expr::Frobenius {
-                        inputs: Vec::new(),
-                        outputs: Vec::new(),
-                    }
-                }
+                Rule::frobenius_empty => Expr::Frobenius {
+                    inputs: Vec::new(),
+                    outputs: Vec::new(),
+                },
                 _ => unreachable!(),
             }
         }
@@ -85,15 +83,8 @@ fn build_expr(pair: pest::iterators::Pair<Rule>) -> Expr {
 fn build_variable(pair: pest::iterators::Pair<Rule>) -> Variable {
     match pair.as_rule() {
         Rule::variable => {
-            if pair.as_str() == "_" {
-                Variable::Anonymous
-            } else {
-                let inner = pair.into_inner().next().unwrap();
-                match inner.as_rule() {
-                    Rule::name => Variable::Named(inner.as_str().to_string()),
-                    _ => Variable::Named(inner.as_str().to_string()),
-                }
-            }
+            let inner = pair.into_inner().next().unwrap();
+            Variable::Named(inner.as_str().to_string())
         }
         _ => unreachable!(),
     }

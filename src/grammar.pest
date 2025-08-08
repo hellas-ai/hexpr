@@ -27,9 +27,6 @@ frobenius_empty = { "[" ~ "]" }
 
 operation = { name }
 
-variable = {
-    name
-  | "_"
-}
+variable = { name }
 
 name = @{ (ASCII_ALPHANUMERIC | "+" | "-" | "*" | "/" | "\\") ~ (ASCII_ALPHANUMERIC | "_" | "-" | "+" | "*" | "/" | "\\")* }

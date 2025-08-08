@@ -194,7 +194,7 @@ mod integration_tests {
 
     #[test]
     fn test_cli_complex_expression() {
-        let expr = HExprParser::parse_expr("({[_] -} +)").unwrap();
+        let expr = HExprParser::parse_expr("({[a] -} +)").unwrap();
         assert!(matches!(expr, Expr::Composition(_)));
     }
 }

@@ -50,13 +50,13 @@ fn test_identity_shorthand() {
 }
 
 #[test]
-fn test_anonymous_identity() {
-    let result = HExprParser::parse_expr("[_]").unwrap();
+fn test_named_identity() {
+    let result = HExprParser::parse_expr("[a]").unwrap();
     assert_eq!(
         result,
         Expr::Frobenius {
-            inputs: vec![Variable::Anonymous],
-            outputs: vec![Variable::Anonymous],
+            inputs: vec![Variable::Named("a".to_string())],
+            outputs: vec![Variable::Named("a".to_string())],
         }
     );
 }
@@ -81,14 +81,14 @@ fn test_identity_via_composition() {
 
 #[test]
 fn test_subtraction_pointfree() {
-    let result = HExprParser::parse_expr("({[_] -} +)").unwrap();
+    let result = HExprParser::parse_expr("({[a] -} +)").unwrap();
     assert_eq!(
         result,
         Expr::Composition(vec![
             Expr::Tensor(vec![
                 Expr::Frobenius {
-                    inputs: vec![Variable::Anonymous],
-                    outputs: vec![Variable::Anonymous],
+                    inputs: vec![Variable::Named("a".to_string())],
+                    outputs: vec![Variable::Named("a".to_string())],
                 },
                 Expr::Operation("-".to_string()),
             ]),
@@ -188,13 +188,16 @@ fn test_create_variable() {
 }
 
 #[test]
-fn test_dispell_summon_anonymous() {
-    let result = HExprParser::parse_expr("[_ _ . _]").unwrap();
+fn test_dispell_summon_named() {
+    let result = HExprParser::parse_expr("[a b . c]").unwrap();
     assert_eq!(
         result,
         Expr::Frobenius {
-            inputs: vec![Variable::Anonymous, Variable::Anonymous],
-            outputs: vec![Variable::Anonymous],
+            inputs: vec![
+                Variable::Named("a".to_string()),
+                Variable::Named("b".to_string())
+            ],
+            outputs: vec![Variable::Named("c".to_string())],
         }
     );
 }
