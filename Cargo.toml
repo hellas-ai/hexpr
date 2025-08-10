@@ -1,5 +1,5 @@
 [package]
-name = "h-exprs"
+name = "hexpr"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,9 +7,6 @@ edition = "2021"
 pest = "2.7"
 pest_derive = "2.1"
 clap = "4.0"
-open-hypergraphs = "0.2.3"
+open-hypergraphs = "0.2.4"
 open-hypergraphs-dot = "0.2.1"
 graphviz-rust = "0.9.5"
-
-[patch.crates-io]
-open-hypergraphs = { path = "../open-hypergraphs" }

@@ -1,5 +1,5 @@
 use clap::{Arg, Command};
-use h_exprs::{
+use hexpr::{
     propagate_object_labels, to_svg,
     translate::{HObject, HOperation},
     translate_expr_with_signatures, HExprParser, OperationSignature,
@@ -11,7 +11,7 @@ use std::io::{self, Read, Write};
 fn apply_quotient_if_needed(
     mut hypergraph: OpenHypergraph<HObject, HOperation>,
     quotient: bool,
-) -> Result<OpenHypergraph<HObject, HOperation>, h_exprs::translate::TranslationError> {
+) -> Result<OpenHypergraph<HObject, HOperation>, hexpr::translate::TranslationError> {
     if quotient {
         // First propagate object labels to resolve Unknown/Known conflicts
         propagate_object_labels(&mut hypergraph)?;
@@ -204,7 +204,7 @@ fn main() {
 mod integration_tests {
     use super::*;
 
-    use h_exprs::Expr;
+    use hexpr::Expr;
 
     #[test]
     fn test_cli_basic_parsing() {
