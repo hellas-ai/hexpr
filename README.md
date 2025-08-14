@@ -80,4 +80,32 @@ If no signature file is explicitly provided via `--signature`, an empty signatur
 
 # Category Theory
 
-TODO
+A HExpr is syntax for defining an "open hypergraph".
+Jargonically: open hypergraphs form a category isomorphic to the free symmetric monoidal category on a given signature.
+
+Pragmatically, you can think of open hypergraphs as representing the kinds of
+diagram we see above in a precise mathematical sense.
+These diagrams have an *algebraic* description in terms of compositions `(f g)`
+and tensor products `{f g}`: we'll explore that in detail here.
+
+A *signature* `(Σ₀, Σ₁)` is pair of sets: objects `Σ₀` label wires, and `Σ₁` label boxes (operations).
+One intuition is "types" and "primitive functions", but diagrams need not always represent functions.
+
+Each operation `f ∈ Σ₁` has a *type*: a list of source objects `X₀...Xm` and a list of target objects `Y₀..Yn`.
+We write this as `f : X₀...Xm → Y₀...Yn`.
+
+**Mapping hexprs to categories**
+
+Now let `f : A → B` and `g : B → C` be operations. Then:
+
+- The hexpr `(f g)` represents the *composition* of maps `f ; g : A → C`
+- The hexpr `{f g}` represents the *composition* of maps `f ; g : A B → B C`
+- The hexpr `[x₀ ... x_{n-1}]` represents the identity map on `n` wires
+
+In addition, we have *special frobenius structure*.
+This arises naturally as a result of the hypergraph representation, and amounts to adding four extra operations:
+
+- comonoid: `[x . x x]`
+- counit: `[x.]`
+- monoid: `[x . x x]`
+- unit: `[.x]`
