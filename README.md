@@ -56,7 +56,28 @@ How do hexprs know that `add` has two inputs and one output? Via a **signature**
 the user must tell the hexpr library the *arity* and *type* of each operation.
 For example, `add : ℝ × ℝ → ℝ`.
 
-TODO: for src/main.rs, you can supply a signature as json using ... TODO
+You can supply operation signature as JSON using the `--signature` or `-s` flag:
+
+```bash
+cargo run -- '(add mul neg)' -qv --signature my_signature.json
+```
+
+The JSON format specifies inputs and outputs as arrays of type names:
+
+```json
+{
+  "add": {
+    "inputs": ["ℝ", "ℝ"],
+    "outputs": ["ℝ"]
+  },
+  "mul": {
+    "inputs": ["ℝ", "ℝ"],
+    "outputs": ["ℝ"]
+  }
+}
+```
+
+If no signature file is explicitly provided via `--signature`, an empty signature will be used. With an empty signature, no operations are available - only Frobenius structures (variable binding) can be used. Operations must be explicitly defined in a signature file.
 
 # Category Theory
 

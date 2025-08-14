@@ -1,8 +1,9 @@
 use crate::ast::{Expr, Variable};
 use open_hypergraphs::lax::{Hyperedge, NodeId, OpenHypergraph};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum HObject {
     Unknown,
     Named(String),
@@ -63,7 +64,7 @@ impl std::fmt::Display for TranslationError {
 
 impl std::error::Error for TranslationError {}
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OperationSignature<O> {
     pub inputs: Vec<O>,
     pub outputs: Vec<O>,
@@ -77,19 +78,19 @@ impl<O> OperationSignature<O> {
 
 pub struct Translator {
     variables: HashMap<String, NodeId>,
-    operation_signatures: HashMap<String, OperationSignature<HObject>>,
+    operation_signature: HashMap<String, OperationSignature<HObject>>,
 }
 
 impl Translator {
-    pub fn new(signatures: HashMap<String, OperationSignature<HObject>>) -> Self {
+    pub fn new(signature: HashMap<String, OperationSignature<HObject>>) -> Self {
         Self {
             variables: HashMap::new(),
-            operation_signatures: signatures,
+            operation_signature: signature,
         }
     }
 
     pub fn add_operation(&mut self, name: String, signature: OperationSignature<HObject>) {
-        self.operation_signatures.insert(name, signature);
+        self.operation_signature.insert(name, signature);
     }
 
     pub fn translate(
@@ -123,7 +124,7 @@ impl Translator {
     ) -> Result<(Vec<NodeId>, Vec<NodeId>), TranslationError> {
         // Look up the operation signature
         let signature = self
-            .operation_signatures
+            .operation_signature
             .get(name)
             .cloned()
             .ok_or_else(|| TranslationError {
@@ -249,11 +250,11 @@ impl Translator {
     }
 }
 
-pub fn translate_expr_with_signatures(
+pub fn translate_expr_with_signature(
     expr: &Expr,
-    signatures: HashMap<String, OperationSignature<HObject>>,
+    signature: HashMap<String, OperationSignature<HObject>>,
 ) -> Result<OpenHypergraph<HObject, HOperation>, TranslationError> {
-    let mut translator = Translator::new(signatures);
+    let mut translator = Translator::new(signature);
     translator.translate(expr)
 }
 
@@ -290,15 +291,15 @@ mod tests {
     fn test_translate_simple_operation() {
         use std::collections::HashMap;
 
-        let mut signatures = HashMap::new();
+        let mut signature = HashMap::new();
         let obj = HObject::from("ℝ");
-        signatures.insert(
+        signature.insert(
             "add".to_string(),
             OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         );
 
         let expr = HExprParser::parse_expr("add").unwrap();
-        let result = translate_expr_with_signatures(&expr, signatures);
+        let result = translate_expr_with_signature(&expr, signature);
         assert!(result.is_ok());
     }
 
@@ -307,8 +308,8 @@ mod tests {
         use std::collections::HashMap;
 
         let expr = HExprParser::parse_expr("[x x . x]").unwrap();
-        let signatures = HashMap::new(); // Empty signatures for pure frobenius
-        let result = translate_expr_with_signatures(&expr, signatures);
+        let signature = HashMap::new(); // Empty signature for pure frobenius
+        let result = translate_expr_with_signature(&expr, signature);
         assert!(result.is_ok());
     }
 
@@ -316,20 +317,20 @@ mod tests {
     fn test_translate_composition() {
         use std::collections::HashMap;
 
-        let mut signatures = HashMap::new();
+        let mut signature = HashMap::new();
         let obj = HObject::from("ℝ");
         // copy: 1->2, add: 2->1, so they can compose
-        signatures.insert(
+        signature.insert(
             "copy".to_string(),
             OperationSignature::new(vec![obj.clone()], vec![obj.clone(), obj.clone()]),
         );
-        signatures.insert(
+        signature.insert(
             "add".to_string(),
             OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         );
 
         let expr = HExprParser::parse_expr("(copy add)").unwrap();
-        let result = translate_expr_with_signatures(&expr, signatures);
+        let result = translate_expr_with_signature(&expr, signature);
         assert!(result.is_ok());
     }
 
@@ -337,39 +338,39 @@ mod tests {
     fn test_translate_tensor() {
         use std::collections::HashMap;
 
-        let mut signatures = HashMap::new();
+        let mut signature = HashMap::new();
         let obj = HObject::from("ℝ");
-        signatures.insert(
+        signature.insert(
             "add".to_string(),
             OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         );
-        signatures.insert(
+        signature.insert(
             "sub".to_string(),
             OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         );
 
         let expr = HExprParser::parse_expr("{add sub}").unwrap();
-        let result = translate_expr_with_signatures(&expr, signatures);
+        let result = translate_expr_with_signature(&expr, signature);
         assert!(result.is_ok());
     }
 
     #[test]
-    fn test_translate_with_proper_signatures() {
+    fn test_translate_with_proper_signature() {
         use std::collections::HashMap;
 
-        let mut signatures = HashMap::new();
+        let mut signature = HashMap::new();
         let obj = HObject::from("ℝ");
-        signatures.insert(
+        signature.insert(
             "copy".to_string(),
             OperationSignature::new(vec![obj.clone()], vec![obj.clone(), obj.clone()]),
         ); // 1->2
-        signatures.insert(
+        signature.insert(
             "+".to_string(),
             OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         ); // 2->1
 
         let expr = HExprParser::parse_expr("(copy +)").unwrap();
-        let result = translate_expr_with_signatures(&expr, signatures);
+        let result = translate_expr_with_signature(&expr, signature);
         assert!(result.is_ok());
 
         let hypergraph = result.unwrap();
@@ -378,32 +379,32 @@ mod tests {
     }
 
     #[test]
-    fn test_proper_composition_signatures() {
+    fn test_proper_composition_signature() {
         use std::collections::HashMap;
 
-        let mut signatures = HashMap::new();
+        let mut signature = HashMap::new();
         let obj = HObject::from("ℝ");
-        signatures.insert(
+        signature.insert(
             "copy".to_string(),
             OperationSignature::new(vec![obj.clone()], vec![obj.clone(), obj.clone()]),
         ); // 1->2
-        signatures.insert(
+        signature.insert(
             "+".to_string(),
             OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         ); // 2->1
-        signatures.insert(
+        signature.insert(
             "neg".to_string(),
             OperationSignature::new(vec![obj.clone()], vec![obj.clone()]),
         ); // 1->1
 
         // Test that copy (1->2) followed by + (2->1) works properly
         let expr = HExprParser::parse_expr("(copy +)").unwrap();
-        let result = translate_expr_with_signatures(&expr, signatures.clone());
+        let result = translate_expr_with_signature(&expr, signature.clone());
         assert!(result.is_ok());
 
         // Test a composition mismatch - this should fail
         let expr = HExprParser::parse_expr("({copy neg} +)").unwrap();
-        let result = translate_expr_with_signatures(&expr, signatures);
+        let result = translate_expr_with_signature(&expr, signature);
         // copy (1->2) tensored with neg (1->1) = 3 outputs, but + expects 2 inputs
         assert!(result.is_err());
 
@@ -413,19 +414,19 @@ mod tests {
     }
 
     #[test]
-    fn test_custom_signatures() {
+    fn test_custom_signature() {
         use std::collections::HashMap;
 
-        let mut signatures = HashMap::new();
+        let mut signature = HashMap::new();
         let obj = HObject::from("ℝ");
-        signatures.insert(
+        signature.insert(
             "triple".to_string(),
             OperationSignature::new(
                 vec![obj.clone()],
                 vec![obj.clone(), obj.clone(), obj.clone()],
             ),
         );
-        signatures.insert(
+        signature.insert(
             "merge3".to_string(),
             OperationSignature::new(
                 vec![obj.clone(), obj.clone(), obj.clone()],
@@ -434,7 +435,7 @@ mod tests {
         );
 
         let expr = HExprParser::parse_expr("(triple merge3)").unwrap();
-        let result = translate_expr_with_signatures(&expr, signatures);
+        let result = translate_expr_with_signature(&expr, signature);
         assert!(result.is_ok());
     }
 
@@ -442,10 +443,10 @@ mod tests {
     fn test_unknown_operation_error() {
         use std::collections::HashMap;
 
-        let signatures = HashMap::new(); // Empty signatures
+        let signature = HashMap::new(); // Empty signature
 
         let expr = HExprParser::parse_expr("unknown_op").unwrap();
-        let result = translate_expr_with_signatures(&expr, signatures);
+        let result = translate_expr_with_signature(&expr, signature);
         assert!(result.is_err());
 
         if let Err(e) = result {

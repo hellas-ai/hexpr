@@ -2,10 +2,11 @@ use clap::{Arg, Command};
 use hexpr::{
     propagate_object_labels, to_svg,
     translate::{HObject, HOperation},
-    translate_expr_with_signatures, HExprParser, OperationSignature,
+    translate_expr_with_signature, HExprParser, OperationSignature,
 };
 use open_hypergraphs::lax::OpenHypergraph;
 use std::collections::HashMap;
+use std::fs;
 use std::io::{self, Read, Write};
 
 fn apply_quotient_if_needed(
@@ -21,69 +22,30 @@ fn apply_quotient_if_needed(
     Ok(hypergraph)
 }
 
-fn create_default_signatures() -> HashMap<String, OperationSignature<HObject>> {
-    let mut signatures = HashMap::new();
+fn load_signature_from_file(
+    path: &str,
+) -> Result<HashMap<String, OperationSignature<HObject>>, Box<dyn std::error::Error>> {
+    let content = fs::read_to_string(path)?;
+    let json_signature: HashMap<String, serde_json::Value> = serde_json::from_str(&content)?;
 
-    let obj = HObject::from("ℝ"); // Using ℝ (real numbers) as the default object type
+    let mut signature = HashMap::new();
 
-    // Binary operations: 2 → 1
-    signatures.insert(
-        "add".to_string(),
-        OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
-    );
-    signatures.insert(
-        "sub".to_string(),
-        OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
-    );
-    signatures.insert(
-        "mul".to_string(),
-        OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
-    );
-    signatures.insert(
-        "div".to_string(),
-        OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
-    );
+    for (name, sig_json) in json_signature {
+        let inputs: Vec<String> = serde_json::from_value(sig_json["inputs"].clone())?;
+        let outputs: Vec<String> = serde_json::from_value(sig_json["outputs"].clone())?;
 
-    // Unary operations: 1 → 1
-    signatures.insert(
-        "neg".to_string(),
-        OperationSignature::new(vec![obj.clone()], vec![obj.clone()]),
-    );
+        let input_objects: Vec<HObject> = inputs.into_iter().map(HObject::from).collect();
+        let output_objects: Vec<HObject> = outputs.into_iter().map(HObject::from).collect();
 
-    // Structural operations
-    signatures.insert(
-        "copy".to_string(),
-        OperationSignature::new(vec![obj.clone()], vec![obj.clone(), obj.clone()]),
-    ); // 1 → 2
-    signatures.insert(
-        "discard".to_string(),
-        OperationSignature::new(vec![obj.clone()], vec![]),
-    ); // 1 → 0
-    signatures.insert(
-        "create".to_string(),
-        OperationSignature::new(vec![], vec![obj.clone()]),
-    ); // 0 → 1
+        signature.insert(name, OperationSignature::new(input_objects, output_objects));
+    }
 
-    signatures.insert(
-        "nat/zero".to_string(),
-        OperationSignature::new(vec![], vec![HObject::from("ℕ")]),
-    );
-    signatures.insert(
-        "nat/add".to_string(),
-        OperationSignature::new(
-            vec![HObject::from("ℕ"), HObject::from("ℕ")],
-            vec![HObject::from("ℕ")],
-        ),
-    );
-    signatures.insert(
-        "nat/add".to_string(),
-        OperationSignature::new(
-            vec![HObject::from("ℕ"), HObject::from("ℕ")],
-            vec![HObject::from("ℕ")],
-        ),
-    );
+    Ok(signature)
+}
 
-    signatures
+fn create_default_signature() -> HashMap<String, OperationSignature<HObject>> {
+    // Return empty signature - no built-in operations
+    HashMap::new()
 }
 
 fn main() {
@@ -131,6 +93,13 @@ fn main() {
                 .action(clap::ArgAction::SetTrue)
                 .help("Apply quotient operation to the output hypergraph"),
         )
+        .arg(
+            Arg::new("signature")
+                .short('s')
+                .long("signature")
+                .value_name("FILE")
+                .help("JSON file containing operation signature (if not provided, uses empty signature)"),
+        )
         .get_matches();
 
     let input = matches.get_one::<String>("INPUT").unwrap();
@@ -139,6 +108,7 @@ fn main() {
     let translate = matches.get_flag("translate");
     let visualize = matches.get_flag("visualize");
     let quotient = matches.get_flag("quotient");
+    let signature_file = matches.get_one::<String>("signature");
 
     let expr_str = if input == "-" {
         let mut buffer = String::new();
@@ -155,8 +125,17 @@ fn main() {
             if debug {
                 println!("Debug AST: {:#?}", expr);
             } else if visualize {
-                let signatures = create_default_signatures();
-                match translate_expr_with_signatures(&expr, signatures) {
+                let signature = if let Some(file_path) = signature_file {
+                    load_signature_from_file(file_path).unwrap_or_else(|e| {
+                        eprintln!("Warning: Could not load signature from {}: {}", file_path, e);
+                        eprintln!("Using empty signature instead.");
+                        create_default_signature()
+                    })
+                } else {
+                    eprintln!("Warning: No signature file provided, using empty signature.");
+                    create_default_signature()
+                };
+                match translate_expr_with_signature(&expr, signature) {
                     Ok(hypergraph) => match apply_quotient_if_needed(hypergraph, quotient) {
                         Ok(processed_hypergraph) => match to_svg(&processed_hypergraph) {
                             Ok(svg_bytes) => {
@@ -178,8 +157,17 @@ fn main() {
                     }
                 }
             } else if translate {
-                let signatures = create_default_signatures();
-                match translate_expr_with_signatures(&expr, signatures) {
+                let signature = if let Some(file_path) = signature_file {
+                    load_signature_from_file(file_path).unwrap_or_else(|e| {
+                        eprintln!("Warning: Could not load signature from {}: {}", file_path, e);
+                        eprintln!("Using empty signature instead.");
+                        create_default_signature()
+                    })
+                } else {
+                    eprintln!("Warning: No signature file provided, using empty signature.");
+                    create_default_signature()
+                };
+                match translate_expr_with_signature(&expr, signature) {
                     Ok(hypergraph) => match apply_quotient_if_needed(hypergraph, quotient) {
                         Ok(processed_hypergraph) => {
                             println!("Open Hypergraph: {:#?}", processed_hypergraph);

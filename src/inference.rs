@@ -85,23 +85,23 @@ fn find_best_label_from_indices(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::translate::{translate_expr_with_signatures, OperationSignature};
+    use crate::translate::{translate_expr_with_signature, OperationSignature};
     use crate::HExprParser;
     use std::collections::HashMap;
 
     #[test]
     fn test_propagate_unknown_to_known() {
         // Create a hypergraph where Unknown nodes should get labels from Named nodes
-        let mut signatures = HashMap::new();
+        let mut signature = HashMap::new();
         let obj = HObject::from("ℝ");
-        signatures.insert(
+        signature.insert(
             "+".to_string(),
             OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         );
 
         // Parse an expression that mixes frobenius (Unknown) with operations (Named)
         let expr = HExprParser::parse_expr("([x . x x] +)").unwrap();
-        let mut graph = translate_expr_with_signatures(&expr, signatures).unwrap();
+        let mut graph = translate_expr_with_signature(&expr, signature).unwrap();
 
         // Before propagation, we should have both Unknown and Named nodes
         let has_unknown = graph
@@ -127,7 +127,7 @@ mod tests {
     fn test_all_unknown_stays_unknown() {
         // Test that if all nodes in an equivalence class are Unknown, they stay Unknown
         let expr = HExprParser::parse_expr("[x x . x]").unwrap();
-        let mut graph = translate_expr_with_signatures(&expr, HashMap::new()).unwrap();
+        let mut graph = translate_expr_with_signature(&expr, HashMap::new()).unwrap();
 
         // All nodes should be Unknown before propagation
         let all_unknown = graph
@@ -151,14 +151,14 @@ mod tests {
     #[test]
     fn test_type_conflict_error() {
         // Test that conflicting types in the same equivalence class cause an error
-        let mut signatures = HashMap::new();
+        let mut signature = HashMap::new();
         let r_obj = HObject::from("ℝ");
         let n_obj = HObject::from("ℕ");
-        signatures.insert(
+        signature.insert(
             "+".to_string(),
             OperationSignature::new(vec![r_obj.clone(), r_obj.clone()], vec![r_obj.clone()]),
         );
-        signatures.insert(
+        signature.insert(
             "nat_zero".to_string(),
             OperationSignature::new(vec![], vec![n_obj.clone()]),
         );
