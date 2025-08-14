@@ -28,19 +28,19 @@ fn create_default_signatures() -> HashMap<String, OperationSignature<HObject>> {
 
     // Binary operations: 2 → 1
     signatures.insert(
-        "+".to_string(),
+        "add".to_string(),
         OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
     );
     signatures.insert(
-        "-".to_string(),
+        "sub".to_string(),
         OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
     );
     signatures.insert(
-        "*".to_string(),
+        "mul".to_string(),
         OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
     );
     signatures.insert(
-        "/".to_string(),
+        "div".to_string(),
         OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
     );
 
