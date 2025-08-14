@@ -15,33 +15,32 @@ Parallel composition of operations with `{...}` brackets, e.g. `{add copy}`:
 ![Parallel Composition](propaganda/parallel_composition.svg)
 
 Binding of names to wires with `[...]` brackets. We can write identities (wires
-with no operations):
+with no operations) as `[x y . x y]`:
 
-`[x y . x y]`: ![Identity with Binding](propaganda/identity_binding.svg)
+![Identity with Binding](propaganda/identity_binding.svg)
 
-You can also write this as shorthand:
+You can also write this as shorthand `[x y]`:
 
-`[x y]`: ![Identity Shorthand](propaganda/identity_shorthand.svg)
+![Identity Shorthand](propaganda/identity_shorthand.svg)
 
-Joining and splitting wires:
+Joining `[x x . x]` and splitting `[x . x x]` wires:
 
-`[x x . x]`: ![Joining Wires](propaganda/joining_wires.svg)
-`[x . x x]`: ![Splitting Wires](propaganda/splitting_wires.svg)
+![Joining Wires](propaganda/joining_wires.svg)
+![Splitting Wires](propaganda/splitting_wires.svg)
 
-Dispelling and summoning wires:
+Dispelling `[x.]` and summoning `[.x]` wires:
 
-`[x.]`: ![Dispelling Wires](propaganda/dispelling_wires.svg)
-`[.x]`: ![Summoning Wires](propaganda/summoning_wires.svg)
+![Dispelling Wires](propaganda/dispelling_wires.svg)
+![Summoning Wires](propaganda/summoning_wires.svg)
 
-Lastly, `[x y z]` is shorthand for `[x y z . x y z]`.
-
-Note that name bindings are *global*- they persist *outside* the `[..]` brackets.
+Note that name bindings are *global*- names are still bound to a given wire
+*outside* the `[..]` brackets expression.
 This allows you to construct hypergraphs in "imperative style" using square brackets.
 
     ([a b.] {                    // [a b] are like "function arguments"
-        ([.a b] add [acc.])     // acc = a + b
-        ([.a acc] mul [result.] // result = a * acc
-    })
+        ([.a b] add [acc.])      // acc = a + b
+        ([.a acc] mul [result.]  // result = a * acc
+    } [.result])                 // [.result] says there is one output wire - result.
 
 This expression produces the following diagram:
 

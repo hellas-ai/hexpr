@@ -44,6 +44,6 @@ cargo run -- '[.x]' -qv > propaganda/summoning_wires.svg
 
 # Complex imperative expression
 echo "Generating complex imperative expression..."
-cargo run -- '([a b.] { ([.a b] add [acc.]) ([.a acc] mul [result.]) })' -qv -s signature.json > propaganda/imperative_example.svg
+cargo run -- '([a b.] { ([.a b] add [acc.]) ([.a acc] mul [result.]) } [.result])' -qv -s signature.json > propaganda/imperative_example.svg
 
 echo "All images generated successfully in propaganda/ directory!"
