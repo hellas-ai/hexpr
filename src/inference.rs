@@ -85,7 +85,7 @@ fn find_best_label_from_indices(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::translate::{translate_expr_with_signature, OperationSignature};
+    use crate::translate::{translate_expr_with_signature, OperationType};
     use crate::HExprParser;
     use std::collections::HashMap;
 
@@ -96,7 +96,7 @@ mod tests {
         let obj = HObject::from("ℝ");
         signature.insert(
             "+".to_string(),
-            OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
+            OperationType::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         );
 
         // Parse an expression that mixes frobenius (Unknown) with operations (Named)
@@ -156,11 +156,11 @@ mod tests {
         let n_obj = HObject::from("ℕ");
         signature.insert(
             "+".to_string(),
-            OperationSignature::new(vec![r_obj.clone(), r_obj.clone()], vec![r_obj.clone()]),
+            OperationType::new(vec![r_obj.clone(), r_obj.clone()], vec![r_obj.clone()]),
         );
         signature.insert(
             "nat_zero".to_string(),
-            OperationSignature::new(vec![], vec![n_obj.clone()]),
+            OperationType::new(vec![], vec![n_obj.clone()]),
         );
 
         // Create a direct type conflict by manually building a graph

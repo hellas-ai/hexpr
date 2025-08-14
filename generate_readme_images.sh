@@ -12,11 +12,11 @@ mkdir -p propaganda
 
 # Sequential composition: (add neg copy)
 echo "Generating sequential composition..."
-cargo run -- '(add neg copy)' -qv > propaganda/sequential_composition.svg
+cargo run -- '(add neg copy)' -qv -s signature.json > propaganda/sequential_composition.svg
 
 # Parallel composition: {add copy}
 echo "Generating parallel composition..."
-cargo run -- '{add copy}' -qv > propaganda/parallel_composition.svg
+cargo run -- '{add copy}' -qv -s signature.json > propaganda/parallel_composition.svg
 
 # Identity with binding: [x y . x y]
 echo "Generating identity with binding..."
@@ -44,6 +44,6 @@ cargo run -- '[.x]' -qv > propaganda/summoning_wires.svg
 
 # Complex imperative expression
 echo "Generating complex imperative expression..."
-cargo run -- '([a b.] { ([.a b] add [acc.]) ([.a acc] mul [result.]) })' -qv > propaganda/imperative_example.svg
+cargo run -- '([a b.] { ([.a b] add [acc.]) ([.a acc] mul [result.]) })' -qv -s signature.json > propaganda/imperative_example.svg
 
 echo "All images generated successfully in propaganda/ directory!"

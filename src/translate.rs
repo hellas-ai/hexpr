@@ -65,12 +65,12 @@ impl std::fmt::Display for TranslationError {
 impl std::error::Error for TranslationError {}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OperationSignature<O> {
+pub struct OperationType<O> {
     pub inputs: Vec<O>,
     pub outputs: Vec<O>,
 }
 
-impl<O> OperationSignature<O> {
+impl<O> OperationType<O> {
     pub fn new(inputs: Vec<O>, outputs: Vec<O>) -> Self {
         Self { inputs, outputs }
     }
@@ -78,18 +78,18 @@ impl<O> OperationSignature<O> {
 
 pub struct Translator {
     variables: HashMap<String, NodeId>,
-    operation_signature: HashMap<String, OperationSignature<HObject>>,
+    operation_signature: HashMap<String, OperationType<HObject>>,
 }
 
 impl Translator {
-    pub fn new(signature: HashMap<String, OperationSignature<HObject>>) -> Self {
+    pub fn new(signature: HashMap<String, OperationType<HObject>>) -> Self {
         Self {
             variables: HashMap::new(),
             operation_signature: signature,
         }
     }
 
-    pub fn add_operation(&mut self, name: String, signature: OperationSignature<HObject>) {
+    pub fn add_operation(&mut self, name: String, signature: OperationType<HObject>) {
         self.operation_signature.insert(name, signature);
     }
 
@@ -123,13 +123,13 @@ impl Translator {
         graph: &mut OpenHypergraph<HObject, HOperation>,
     ) -> Result<(Vec<NodeId>, Vec<NodeId>), TranslationError> {
         // Look up the operation signature
-        let signature = self
-            .operation_signature
-            .get(name)
-            .cloned()
-            .ok_or_else(|| TranslationError {
-                message: format!("Unknown operation: '{}'", name),
-            })?;
+        let signature =
+            self.operation_signature
+                .get(name)
+                .cloned()
+                .ok_or_else(|| TranslationError {
+                    message: format!("Unknown operation: '{}'", name),
+                })?;
 
         // Create input nodes
         let input_nodes: Vec<NodeId> = signature
@@ -252,7 +252,7 @@ impl Translator {
 
 pub fn translate_expr_with_signature(
     expr: &Expr,
-    signature: HashMap<String, OperationSignature<HObject>>,
+    signature: HashMap<String, OperationType<HObject>>,
 ) -> Result<OpenHypergraph<HObject, HOperation>, TranslationError> {
     let mut translator = Translator::new(signature);
     translator.translate(expr)
@@ -295,7 +295,7 @@ mod tests {
         let obj = HObject::from("ℝ");
         signature.insert(
             "add".to_string(),
-            OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
+            OperationType::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         );
 
         let expr = HExprParser::parse_expr("add").unwrap();
@@ -322,11 +322,11 @@ mod tests {
         // copy: 1->2, add: 2->1, so they can compose
         signature.insert(
             "copy".to_string(),
-            OperationSignature::new(vec![obj.clone()], vec![obj.clone(), obj.clone()]),
+            OperationType::new(vec![obj.clone()], vec![obj.clone(), obj.clone()]),
         );
         signature.insert(
             "add".to_string(),
-            OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
+            OperationType::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         );
 
         let expr = HExprParser::parse_expr("(copy add)").unwrap();
@@ -342,11 +342,11 @@ mod tests {
         let obj = HObject::from("ℝ");
         signature.insert(
             "add".to_string(),
-            OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
+            OperationType::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         );
         signature.insert(
             "sub".to_string(),
-            OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
+            OperationType::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         );
 
         let expr = HExprParser::parse_expr("{add sub}").unwrap();
@@ -362,11 +362,11 @@ mod tests {
         let obj = HObject::from("ℝ");
         signature.insert(
             "copy".to_string(),
-            OperationSignature::new(vec![obj.clone()], vec![obj.clone(), obj.clone()]),
+            OperationType::new(vec![obj.clone()], vec![obj.clone(), obj.clone()]),
         ); // 1->2
         signature.insert(
             "+".to_string(),
-            OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
+            OperationType::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         ); // 2->1
 
         let expr = HExprParser::parse_expr("(copy +)").unwrap();
@@ -386,15 +386,15 @@ mod tests {
         let obj = HObject::from("ℝ");
         signature.insert(
             "copy".to_string(),
-            OperationSignature::new(vec![obj.clone()], vec![obj.clone(), obj.clone()]),
+            OperationType::new(vec![obj.clone()], vec![obj.clone(), obj.clone()]),
         ); // 1->2
         signature.insert(
             "+".to_string(),
-            OperationSignature::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
+            OperationType::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         ); // 2->1
         signature.insert(
             "neg".to_string(),
-            OperationSignature::new(vec![obj.clone()], vec![obj.clone()]),
+            OperationType::new(vec![obj.clone()], vec![obj.clone()]),
         ); // 1->1
 
         // Test that copy (1->2) followed by + (2->1) works properly
@@ -421,14 +421,14 @@ mod tests {
         let obj = HObject::from("ℝ");
         signature.insert(
             "triple".to_string(),
-            OperationSignature::new(
+            OperationType::new(
                 vec![obj.clone()],
                 vec![obj.clone(), obj.clone(), obj.clone()],
             ),
         );
         signature.insert(
             "merge3".to_string(),
-            OperationSignature::new(
+            OperationType::new(
                 vec![obj.clone(), obj.clone(), obj.clone()],
                 vec![obj.clone()],
             ),

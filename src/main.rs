@@ -2,7 +2,7 @@ use clap::{Arg, Command};
 use hexpr::{
     propagate_object_labels, to_svg,
     translate::{HObject, HOperation},
-    translate_expr_with_signature, HExprParser, OperationSignature,
+    translate_expr_with_signature, HExprParser, OperationType,
 };
 use open_hypergraphs::lax::OpenHypergraph;
 use std::collections::HashMap;
@@ -24,7 +24,7 @@ fn apply_quotient_if_needed(
 
 fn load_signature_from_file(
     path: &str,
-) -> Result<HashMap<String, OperationSignature<HObject>>, Box<dyn std::error::Error>> {
+) -> Result<HashMap<String, OperationType<HObject>>, Box<dyn std::error::Error>> {
     let content = fs::read_to_string(path)?;
     let json_signature: HashMap<String, serde_json::Value> = serde_json::from_str(&content)?;
 
@@ -37,13 +37,13 @@ fn load_signature_from_file(
         let input_objects: Vec<HObject> = inputs.into_iter().map(HObject::from).collect();
         let output_objects: Vec<HObject> = outputs.into_iter().map(HObject::from).collect();
 
-        signature.insert(name, OperationSignature::new(input_objects, output_objects));
+        signature.insert(name, OperationType::new(input_objects, output_objects));
     }
 
     Ok(signature)
 }
 
-fn create_default_signature() -> HashMap<String, OperationSignature<HObject>> {
+fn create_default_signature() -> HashMap<String, OperationType<HObject>> {
     // Return empty signature - no built-in operations
     HashMap::new()
 }
@@ -127,7 +127,10 @@ fn main() {
             } else if visualize {
                 let signature = if let Some(file_path) = signature_file {
                     load_signature_from_file(file_path).unwrap_or_else(|e| {
-                        eprintln!("Warning: Could not load signature from {}: {}", file_path, e);
+                        eprintln!(
+                            "Warning: Could not load signature from {}: {}",
+                            file_path, e
+                        );
                         eprintln!("Using empty signature instead.");
                         create_default_signature()
                     })
@@ -159,7 +162,10 @@ fn main() {
             } else if translate {
                 let signature = if let Some(file_path) = signature_file {
                     load_signature_from_file(file_path).unwrap_or_else(|e| {
-                        eprintln!("Warning: Could not load signature from {}: {}", file_path, e);
+                        eprintln!(
+                            "Warning: Could not load signature from {}: {}",
+                            file_path, e
+                        );
                         eprintln!("Using empty signature instead.");
                         create_default_signature()
                     })
