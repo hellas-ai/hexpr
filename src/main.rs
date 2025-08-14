@@ -75,6 +75,13 @@ fn create_default_signatures() -> HashMap<String, OperationSignature<HObject>> {
             vec![HObject::from("ℕ")],
         ),
     );
+    signatures.insert(
+        "nat/add".to_string(),
+        OperationSignature::new(
+            vec![HObject::from("ℕ"), HObject::from("ℕ")],
+            vec![HObject::from("ℕ")],
+        ),
+    );
 
     signatures
 }
