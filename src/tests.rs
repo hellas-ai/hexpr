@@ -268,3 +268,58 @@ fn test_invalid_syntax() {
     assert!(HExprParser::parse_expr("{").is_err());
     assert!(HExprParser::parse_expr("").is_err());
 }
+
+#[test]
+fn test_parse_with_signature() {
+    use crate::{parse, HObject, OperationType};
+    use std::collections::HashMap;
+
+    // Create a signature with a simple addition operation
+    let mut signature = HashMap::new();
+    let real = HObject::from("ℝ");
+    signature.insert(
+        "+".to_string(),
+        OperationType::new(vec![real.clone(), real.clone()], vec![real]),
+    );
+
+    // Test with a frobenius structure connected to an operation
+    let result = parse("([x . x x] +)", signature);
+    assert!(result.is_ok());
+
+    let hypergraph = result.unwrap();
+    // Should have created nodes and edges for both the frobenius and the operation
+    assert!(!hypergraph.hypergraph.nodes.is_empty());
+    assert!(!hypergraph.hypergraph.edges.is_empty());
+
+    // All nodes should now be String labels (no HObject enum)
+    // They should all be "ℝ" since that's what the + operation uses
+    let all_real = hypergraph.hypergraph.nodes.iter().all(|n| n == "ℝ");
+    assert!(all_real);
+}
+
+#[test]
+fn test_parse_empty_signature() {
+    use crate::parse;
+    use std::collections::HashMap;
+
+    // Test with empty signature (only frobenius structures)
+    // This should fail because Unknown nodes remain after inference
+    let signature = HashMap::new();
+    let result = parse("[x x . x]", signature);
+    assert!(result.is_err());
+
+    // Should get an error about Unknown object types remaining
+    if let Err(e) = result {
+        assert!(e.to_string().contains("Unknown object type remains"));
+    }
+}
+
+#[test]
+fn test_parse_parse_error() {
+    use crate::parse;
+    use std::collections::HashMap;
+
+    let signature = HashMap::new();
+    let result = parse("invalid[syntax", signature);
+    assert!(result.is_err());
+}
