@@ -1,0 +1,50 @@
+{
+  "1": {
+    "inputs": [],
+    "outputs": ["ℝ"]
+  },
+  "0": {
+    "inputs": [],
+    "outputs": ["ℝ"]
+  },
+  "add": {
+    "inputs": ["ℝ", "ℝ"],
+    "outputs": ["ℝ"]
+  },
+  "sub": {
+    "inputs": ["ℝ", "ℝ"],
+    "outputs": ["ℝ"]
+  },
+  "mul": {
+    "inputs": ["ℝ", "ℝ"],
+    "outputs": ["ℝ"]
+  },
+  "div": {
+    "inputs": ["ℝ", "ℝ"],
+    "outputs": ["ℝ"]
+  },
+  "neg": {
+    "inputs": ["ℝ"],
+    "outputs": ["ℝ"]
+  },
+  "copy": {
+    "inputs": ["ℝ"],
+    "outputs": ["ℝ", "ℝ"]
+  },
+  "discard": {
+    "inputs": ["ℝ"],
+    "outputs": []
+  },
+  "create": {
+    "inputs": [],
+    "outputs": ["ℝ"]
+  },
+  "nat/zero": {
+    "inputs": [],
+    "outputs": ["ℕ"]
+  },
+  "nat/add": {
+    "inputs": ["ℕ", "ℕ"],
+    "outputs": ["ℕ"]
+  }
+}

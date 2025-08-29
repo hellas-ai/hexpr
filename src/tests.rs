@@ -271,15 +271,14 @@ fn test_invalid_syntax() {
 
 #[test]
 fn test_parse_with_signature() {
-    use crate::{parse, HObject, OperationType};
+    use crate::{parse, OperationType};
     use std::collections::HashMap;
 
     // Create a signature with a simple addition operation
     let mut signature = HashMap::new();
-    let real = HObject::from("ℝ");
     signature.insert(
         "+".to_string(),
-        OperationType::new(vec![real.clone(), real.clone()], vec![real]),
+        OperationType::new(vec!["ℝ".to_string(), "ℝ".to_string()], vec!["ℝ".to_string()]),
     );
 
     // Test with a frobenius structure connected to an operation
@@ -295,6 +294,11 @@ fn test_parse_with_signature() {
     // They should all be "ℝ" since that's what the + operation uses
     let all_real = hypergraph.hypergraph.nodes.iter().all(|n| n == "ℝ");
     assert!(all_real);
+
+    // All edge labels should now be String labels (no HOperation enum)
+    // They should all be "+" since that's the operation name
+    let all_plus = hypergraph.hypergraph.edges.iter().all(|e| e == "+");
+    assert!(all_plus);
 }
 
 #[test]
