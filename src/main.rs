@@ -205,17 +205,17 @@ fn main() {
 mod integration_tests {
     use super::*;
 
-    use hexpr::Expr;
+    use hexpr::Hexpr;
 
     #[test]
     fn test_cli_basic_parsing() {
         let expr = HExprParser::parse_expr("[x x . x]").unwrap();
-        assert!(matches!(expr, Expr::Frobenius { .. }));
+        assert!(matches!(expr, Hexpr::Frobenius { .. }));
     }
 
     #[test]
     fn test_cli_complex_expression() {
         let expr = HExprParser::parse_expr("({[a] -} +)").unwrap();
-        assert!(matches!(expr, Expr::Composition(_)));
+        assert!(matches!(expr, Hexpr::Composition(_)));
     }
 }

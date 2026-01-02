@@ -1,4 +1,4 @@
-use crate::ast::{Expr, Variable};
+use crate::ast::{Hexpr, Variable};
 use pest::Parser;
 use pest_derive::Parser;
 
@@ -7,7 +7,7 @@ use pest_derive::Parser;
 pub struct HExprParser;
 
 impl HExprParser {
-    pub fn parse_expr(input: &str) -> Result<Expr, Box<pest::error::Error<Rule>>> {
+    pub fn parse_expr(input: &str) -> Result<Hexpr, Box<pest::error::Error<Rule>>> {
         let pairs = HExprParser::parse(Rule::program, input)?;
         let program = pairs.into_iter().next().unwrap();
         let expr_pair = program.into_inner().next().unwrap();
@@ -15,7 +15,7 @@ impl HExprParser {
     }
 }
 
-fn build_expr(pair: pest::iterators::Pair<Rule>) -> Expr {
+fn build_expr(pair: pest::iterators::Pair<Rule>) -> Hexpr {
     match pair.as_rule() {
         Rule::expr => {
             let inner = pair.into_inner().next().unwrap();
@@ -23,11 +23,11 @@ fn build_expr(pair: pest::iterators::Pair<Rule>) -> Expr {
         }
         Rule::composition => {
             let exprs = pair.into_inner().map(build_expr).collect();
-            Expr::Composition(exprs)
+            Hexpr::Composition(exprs)
         }
         Rule::tensor => {
             let exprs = pair.into_inner().map(build_expr).collect();
-            Expr::Tensor(exprs)
+            Hexpr::Tensor(exprs)
         }
         Rule::frobenius => {
             let inner = pair.into_inner().next().unwrap();
@@ -55,17 +55,17 @@ fn build_expr(pair: pest::iterators::Pair<Rule>) -> Expr {
                         }
                     }
 
-                    Expr::Frobenius { inputs, outputs }
+                    Hexpr::Frobenius { inputs, outputs }
                 }
                 Rule::frobenius_identity => {
                     let variables: Vec<Variable> = inner.into_inner().map(build_variable).collect();
 
-                    Expr::Frobenius {
+                    Hexpr::Frobenius {
                         inputs: variables.clone(),
                         outputs: variables,
                     }
                 }
-                Rule::frobenius_empty => Expr::Frobenius {
+                Rule::frobenius_empty => Hexpr::Frobenius {
                     inputs: Vec::new(),
                     outputs: Vec::new(),
                 },
@@ -74,7 +74,7 @@ fn build_expr(pair: pest::iterators::Pair<Rule>) -> Expr {
         }
         Rule::operation => {
             let name = pair.into_inner().next().unwrap().as_str();
-            Expr::Operation(name.to_string())
+            Hexpr::Operation(name.to_string())
         }
         _ => unreachable!(),
     }
@@ -97,7 +97,7 @@ mod tests {
     #[test]
     fn test_basic_operation() {
         let result = HExprParser::parse_expr("add").unwrap();
-        assert_eq!(result, Expr::Operation("add".to_string()));
+        assert_eq!(result, Hexpr::Operation("add".to_string()));
     }
 
     #[test]
@@ -105,7 +105,7 @@ mod tests {
         let result = HExprParser::parse_expr("[x]").unwrap();
         assert_eq!(
             result,
-            Expr::Frobenius {
+            Hexpr::Frobenius {
                 inputs: vec![Variable::Named("x".to_string())],
                 outputs: vec![Variable::Named("x".to_string())],
             }
@@ -117,7 +117,7 @@ mod tests {
         let result = HExprParser::parse_expr("[x x . x]").unwrap();
         assert_eq!(
             result,
-            Expr::Frobenius {
+            Hexpr::Frobenius {
                 inputs: vec![
                     Variable::Named("x".to_string()),
                     Variable::Named("x".to_string())
@@ -132,9 +132,9 @@ mod tests {
         let result = HExprParser::parse_expr("(add sub)").unwrap();
         assert_eq!(
             result,
-            Expr::Composition(vec![
-                Expr::Operation("add".to_string()),
-                Expr::Operation("sub".to_string()),
+            Hexpr::Composition(vec![
+                Hexpr::Operation("add".to_string()),
+                Hexpr::Operation("sub".to_string()),
             ])
         );
     }
@@ -144,9 +144,9 @@ mod tests {
         let result = HExprParser::parse_expr("{add sub}").unwrap();
         assert_eq!(
             result,
-            Expr::Tensor(vec![
-                Expr::Operation("add".to_string()),
-                Expr::Operation("sub".to_string()),
+            Hexpr::Tensor(vec![
+                Hexpr::Operation("add".to_string()),
+                Hexpr::Operation("sub".to_string()),
             ])
         );
     }
@@ -156,7 +156,7 @@ mod tests {
         let result = HExprParser::parse_expr("[]").unwrap();
         assert_eq!(
             result,
-            Expr::Frobenius {
+            Hexpr::Frobenius {
                 inputs: vec![],
                 outputs: vec![],
             }

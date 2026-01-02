@@ -1,4 +1,4 @@
-use crate::ast::{Expr, Variable};
+use crate::ast::{Hexpr, Variable};
 use open_hypergraphs::lax::{Hyperedge, NodeId, OpenHypergraph};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -95,7 +95,7 @@ impl Translator {
 
     pub fn translate(
         &mut self,
-        expr: &Expr,
+        expr: &Hexpr,
     ) -> Result<OpenHypergraph<HObject, HOperation>, TranslationError> {
         let mut graph = OpenHypergraph::empty();
         let (sources, targets) = self.translate_expr(expr, &mut graph)?;
@@ -106,14 +106,16 @@ impl Translator {
 
     fn translate_expr(
         &mut self,
-        expr: &Expr,
+        expr: &Hexpr,
         graph: &mut OpenHypergraph<HObject, HOperation>,
     ) -> Result<(Vec<NodeId>, Vec<NodeId>), TranslationError> {
         match expr {
-            Expr::Operation(name) => self.translate_operation(name, graph),
-            Expr::Frobenius { inputs, outputs } => self.translate_frobenius(inputs, outputs, graph),
-            Expr::Composition(exprs) => self.translate_composition(exprs, graph),
-            Expr::Tensor(exprs) => self.translate_tensor(exprs, graph),
+            Hexpr::Operation(name) => self.translate_operation(name, graph),
+            Hexpr::Frobenius { inputs, outputs } => {
+                self.translate_frobenius(inputs, outputs, graph)
+            }
+            Hexpr::Composition(exprs) => self.translate_composition(exprs, graph),
+            Hexpr::Tensor(exprs) => self.translate_tensor(exprs, graph),
         }
     }
 
@@ -196,7 +198,7 @@ impl Translator {
 
     fn translate_composition(
         &mut self,
-        exprs: &[Expr],
+        exprs: &[Hexpr],
         graph: &mut OpenHypergraph<HObject, HOperation>,
     ) -> Result<(Vec<NodeId>, Vec<NodeId>), TranslationError> {
         if exprs.is_empty() {
@@ -234,7 +236,7 @@ impl Translator {
 
     fn translate_tensor(
         &mut self,
-        exprs: &[Expr],
+        exprs: &[Hexpr],
         graph: &mut OpenHypergraph<HObject, HOperation>,
     ) -> Result<(Vec<NodeId>, Vec<NodeId>), TranslationError> {
         let mut all_inputs = Vec::new();
@@ -251,7 +253,7 @@ impl Translator {
 }
 
 pub fn translate_expr_with_signature(
-    expr: &Expr,
+    expr: &Hexpr,
     signature: HashMap<String, OperationType<HObject>>,
 ) -> Result<OpenHypergraph<HObject, HOperation>, TranslationError> {
     let mut translator = Translator::new(signature);

@@ -3,7 +3,7 @@ pub mod inference;
 pub mod parser;
 pub mod translate;
 
-pub use ast::{Expr, Variable};
+pub use ast::{Hexpr, Variable};
 pub use inference::propagate_object_labels;
 pub use parser::HExprParser;
 pub use translate::{

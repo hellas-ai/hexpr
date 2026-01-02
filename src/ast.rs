@@ -1,7 +1,12 @@
+//! # H-Expression abstract syntax tree
+
 #[derive(Debug, Clone, PartialEq)]
-pub enum Expr {
-    Composition(Vec<Expr>),
-    Tensor(Vec<Expr>),
+pub enum Hexpr {
+    /// Sequential (categorical) composition of hexprs
+    Composition(Vec<Hexpr>),
+    /// Parallel (tensor) composition of hexprs
+    Tensor(Vec<Hexpr>),
+    /// A Frobenius spider
     Frobenius {
         inputs: Vec<Variable>,
         outputs: Vec<Variable>,
@@ -30,10 +35,10 @@ impl std::fmt::Display for Variable {
     }
 }
 
-impl std::fmt::Display for Expr {
+impl std::fmt::Display for Hexpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Expr::Composition(exprs) => {
+            Hexpr::Composition(exprs) => {
                 write!(f, "(")?;
                 for (i, expr) in exprs.iter().enumerate() {
                     if i > 0 {
@@ -43,7 +48,7 @@ impl std::fmt::Display for Expr {
                 }
                 write!(f, ")")
             }
-            Expr::Tensor(exprs) => {
+            Hexpr::Tensor(exprs) => {
                 write!(f, "{{")?;
                 for (i, expr) in exprs.iter().enumerate() {
                     if i > 0 {
@@ -53,7 +58,7 @@ impl std::fmt::Display for Expr {
                 }
                 write!(f, "}}")
             }
-            Expr::Frobenius { inputs, outputs } => {
+            Hexpr::Frobenius { inputs, outputs } => {
                 // Special case for empty frobenius
                 if inputs.is_empty() && outputs.is_empty() {
                     write!(f, "[]")
@@ -75,7 +80,7 @@ impl std::fmt::Display for Expr {
                     write!(f, "]")
                 }
             }
-            Expr::Operation(name) => write!(f, "{}", name),
+            Hexpr::Operation(name) => write!(f, "{}", name),
         }
     }
 }
