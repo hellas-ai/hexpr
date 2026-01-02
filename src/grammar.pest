@@ -25,8 +25,6 @@ dot = { "." }
 frobenius_identity = { "[" ~ variable+ ~ "]" }
 frobenius_empty = { "[" ~ "]" }
 
-operation = { name }
+operation = @{ (ASCII_ALPHANUMERIC | "-" | "_" | "." | "*" | "+" | "/" | "|")+ }
 
-variable = { name }
-
-name = @{ (ASCII_ALPHANUMERIC | "+" | "-" | "*" | "/" | "\\") ~ (ASCII_ALPHANUMERIC | "_" | "-" | "+" | "*" | "/" | "\\")* }
+variable = @{ (ASCII_ALPHANUMERIC | "-" | "_") ~ (ASCII_ALPHANUMERIC | "-" | "_")* }

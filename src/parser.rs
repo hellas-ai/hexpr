@@ -1,4 +1,4 @@
-use crate::ast::{Hexpr, Variable};
+use crate::ast::{Hexpr, Operation, Variable};
 use pest::Parser;
 use pest_derive::Parser;
 
@@ -73,8 +73,8 @@ fn build_expr(pair: pest::iterators::Pair<Rule>) -> Hexpr {
             }
         }
         Rule::operation => {
-            let name = pair.into_inner().next().unwrap().as_str();
-            Hexpr::Operation(name.to_string())
+            let name = pair.as_str();
+            Hexpr::Operation(Operation(name.to_string()))
         }
         _ => unreachable!(),
     }
@@ -83,8 +83,7 @@ fn build_expr(pair: pest::iterators::Pair<Rule>) -> Hexpr {
 fn build_variable(pair: pest::iterators::Pair<Rule>) -> Variable {
     match pair.as_rule() {
         Rule::variable => {
-            let inner = pair.into_inner().next().unwrap();
-            Variable::Named(inner.as_str().to_string())
+            Variable(pair.as_str().to_string())
         }
         _ => unreachable!(),
     }
@@ -95,9 +94,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_basic_operation() {
-        let result = HExprParser::parse_expr("add").unwrap();
-        assert_eq!(result, Hexpr::Operation("add".to_string()));
+    fn test_basic_operation() -> anyhow::Result<()> {
+        let result = HExprParser::parse_expr("add")?;
+        assert_eq!(result, Hexpr::Operation(Operation("add".to_string())));
+        Ok(())
     }
 
     #[test]
@@ -106,8 +106,8 @@ mod tests {
         assert_eq!(
             result,
             Hexpr::Frobenius {
-                inputs: vec![Variable::Named("x".to_string())],
-                outputs: vec![Variable::Named("x".to_string())],
+                inputs: vec![Variable("x".to_string())],
+                outputs: vec![Variable("x".to_string())],
             }
         );
     }
@@ -118,11 +118,8 @@ mod tests {
         assert_eq!(
             result,
             Hexpr::Frobenius {
-                inputs: vec![
-                    Variable::Named("x".to_string()),
-                    Variable::Named("x".to_string())
-                ],
-                outputs: vec![Variable::Named("x".to_string())],
+                inputs: vec![Variable("x".to_string()), Variable("x".to_string())],
+                outputs: vec![Variable("x".to_string())],
             }
         );
     }
@@ -133,8 +130,8 @@ mod tests {
         assert_eq!(
             result,
             Hexpr::Composition(vec![
-                Hexpr::Operation("add".to_string()),
-                Hexpr::Operation("sub".to_string()),
+                Hexpr::Operation(Operation("add".to_string())),
+                Hexpr::Operation(Operation("sub".to_string())),
             ])
         );
     }
@@ -145,8 +142,8 @@ mod tests {
         assert_eq!(
             result,
             Hexpr::Tensor(vec![
-                Hexpr::Operation("add".to_string()),
-                Hexpr::Operation("sub".to_string()),
+                Hexpr::Operation(Operation("add".to_string())),
+                Hexpr::Operation(Operation("sub".to_string())),
             ])
         );
     }

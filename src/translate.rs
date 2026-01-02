@@ -1,4 +1,4 @@
-use crate::ast::{Hexpr, Variable};
+use crate::ast::{Hexpr, Operation, Variable};
 use open_hypergraphs::lax::{Hyperedge, NodeId, OpenHypergraph};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -110,7 +110,7 @@ impl Translator {
         graph: &mut OpenHypergraph<HObject, HOperation>,
     ) -> Result<(Vec<NodeId>, Vec<NodeId>), TranslationError> {
         match expr {
-            Hexpr::Operation(name) => self.translate_operation(name, graph),
+            Hexpr::Operation(Operation(name)) => self.translate_operation(name, graph),
             Hexpr::Frobenius { inputs, outputs } => {
                 self.translate_frobenius(inputs, outputs, graph)
             }
@@ -181,7 +181,7 @@ impl Translator {
         variables
             .iter()
             .map(|var| match var {
-                Variable::Named(name) => {
+                Variable(name) => {
                     if let Some(&existing_node) = self.variables.get(name) {
                         // Variable already exists - reuse its node (creates unification)
                         existing_node

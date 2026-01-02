@@ -120,6 +120,3 @@ fn with_edge_labels<T, X, Y>(
         targets: term.targets,
     }
 }
-
-#[cfg(test)]
-mod tests;

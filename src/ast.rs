@@ -11,27 +11,43 @@ pub enum Hexpr {
         inputs: Vec<Variable>,
         outputs: Vec<Variable>,
     },
-    Operation(String),
+    /// A named operation
+    Operation(Operation),
 }
 
+/// Operation names, must match [a-zA-Z0-9-_.*+-/|]+
 #[derive(Debug, Clone, PartialEq)]
-pub enum Variable {
-    Named(String),
-}
+pub struct Operation(pub(crate) String);
+
+/// Variable names in a Frobenius expression. Must match `[a-zA-Z0-9-_]+`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Variable(pub(crate) String);
 
 impl std::str::FromStr for Variable {
     type Err = std::convert::Infallible;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Variable::Named(s.to_string()))
+        Ok(Variable(s.to_string()))
     }
 }
 
 impl std::fmt::Display for Variable {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Variable::Named(name) => write!(f, "{}", name),
-        }
+        write!(f, "{}", self.0)
+    }
+}
+
+impl std::str::FromStr for Operation {
+    type Err = std::convert::Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Operation(s.to_string()))
+    }
+}
+
+impl std::fmt::Display for Operation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
