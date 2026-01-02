@@ -17,7 +17,7 @@ impl HExprParser {
 
 fn build_expr(pair: pest::iterators::Pair<Rule>) -> Hexpr {
     match pair.as_rule() {
-        Rule::expr => {
+        Rule::hexpr => {
             let inner = pair.into_inner().next().unwrap();
             build_expr(inner)
         }
@@ -82,9 +82,7 @@ fn build_expr(pair: pest::iterators::Pair<Rule>) -> Hexpr {
 
 fn build_variable(pair: pest::iterators::Pair<Rule>) -> Variable {
     match pair.as_rule() {
-        Rule::variable => {
-            Variable(pair.as_str().to_string())
-        }
+        Rule::variable => Variable(pair.as_str().to_string()),
         _ => unreachable!(),
     }
 }

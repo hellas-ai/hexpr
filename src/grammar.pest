@@ -1,18 +1,18 @@
 WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
 COMMENT = _{ "//" ~ (!"\n" ~ ANY)* }
 
-program = { SOI ~ expr ~ EOI }
+program = { SOI ~ hexpr ~ EOI }
 
-expr = {
+hexpr = {
     composition
   | tensor
   | frobenius
   | operation
 }
 
-composition = { "(" ~ expr+ ~ ")" }
+composition = { "(" ~ hexpr+ ~ ")" }
 
-tensor = { "{" ~ expr+ ~ "}" }
+tensor = { "{" ~ hexpr+ ~ "}" }
 
 frobenius = {
     frobenius_full
