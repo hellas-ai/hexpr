@@ -1,5 +1,8 @@
 //! # H-Expression abstract syntax tree
 
+use crate::parser::{HExprParser, Rule};
+use pest::Parser;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Hexpr {
     /// Sequential (categorical) composition of hexprs
@@ -24,10 +27,12 @@ pub struct Operation(pub(crate) String);
 pub struct Variable(pub(crate) String);
 
 impl std::str::FromStr for Variable {
-    type Err = std::convert::Infallible;
+    type Err = Box<pest::error::Error<Rule>>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Variable(s.to_string()))
+        let pairs = HExprParser::parse(Rule::variable, s)?;
+        let variable_pair = pairs.into_iter().next().unwrap();
+        Ok(Variable(variable_pair.as_str().to_string()))
     }
 }
 
@@ -38,10 +43,12 @@ impl std::fmt::Display for Variable {
 }
 
 impl std::str::FromStr for Operation {
-    type Err = std::convert::Infallible;
+    type Err = Box<pest::error::Error<Rule>>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Operation(s.to_string()))
+        let pairs = HExprParser::parse(Rule::operation, s)?;
+        let operation_pair = pairs.into_iter().next().unwrap();
+        Ok(Operation(operation_pair.as_str().to_string()))
     }
 }
 
