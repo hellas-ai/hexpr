@@ -23,7 +23,7 @@ pub enum Hexpr {
 pub struct Operation(pub(crate) String);
 
 /// Variable names in a Frobenius expression. Must match `[a-zA-Z0-9-_]+`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Variable(pub(crate) String);
 
 impl std::str::FromStr for Variable {
@@ -65,7 +65,6 @@ impl std::str::FromStr for Hexpr {
         crate::parser::HExprParser::parse_hexpr(s)
     }
 }
-
 
 impl std::fmt::Display for Hexpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
