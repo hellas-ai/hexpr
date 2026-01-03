@@ -1,5 +1,5 @@
 use crate::ast::{Hexpr, Operation, Variable};
-use pest::Parser;
+use pest::{error::Error, Parser};
 use pest_derive::Parser;
 
 #[derive(Parser)]
@@ -7,7 +7,7 @@ use pest_derive::Parser;
 pub struct HExprParser;
 
 impl HExprParser {
-    pub fn parse_expr(input: &str) -> Result<Hexpr, Box<pest::error::Error<Rule>>> {
+    pub fn parse_hexpr(input: &str) -> Result<Hexpr, Error<Rule>> {
         let pairs = HExprParser::parse(Rule::program, input)?;
         let program = pairs.into_iter().next().unwrap();
         let expr_pair = program.into_inner().next().unwrap();
@@ -51,14 +51,14 @@ mod tests {
 
     #[test]
     fn test_basic_operation() -> anyhow::Result<()> {
-        let result = HExprParser::parse_expr("add")?;
+        let result = HExprParser::parse_hexpr("add")?;
         assert_eq!(result, Hexpr::Operation(Operation("add".to_string())));
         Ok(())
     }
 
     #[test]
     fn test_frobenius_identity() {
-        let result = HExprParser::parse_expr("[x]").unwrap();
+        let result = HExprParser::parse_hexpr("[x]").unwrap();
         assert_eq!(
             result,
             Hexpr::Frobenius {
@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     fn test_frobenius_full() {
-        let result = HExprParser::parse_expr("[x x . x]").unwrap();
+        let result = HExprParser::parse_hexpr("[x x . x]").unwrap();
         assert_eq!(
             result,
             Hexpr::Frobenius {
@@ -82,7 +82,7 @@ mod tests {
 
     #[test]
     fn test_composition() {
-        let result = HExprParser::parse_expr("(add sub)").unwrap();
+        let result = HExprParser::parse_hexpr("(add sub)").unwrap();
         assert_eq!(
             result,
             Hexpr::Composition(vec![
@@ -94,7 +94,7 @@ mod tests {
 
     #[test]
     fn test_tensor() {
-        let result = HExprParser::parse_expr("{add sub}").unwrap();
+        let result = HExprParser::parse_hexpr("{add sub}").unwrap();
         assert_eq!(
             result,
             Hexpr::Tensor(vec![
@@ -106,7 +106,7 @@ mod tests {
 
     #[test]
     fn test_frobenius_empty() {
-        let result = HExprParser::parse_expr("[]").unwrap();
+        let result = HExprParser::parse_hexpr("[]").unwrap();
         assert_eq!(
             result,
             Hexpr::Frobenius {
@@ -118,7 +118,7 @@ mod tests {
 
     #[test]
     fn test_comments_in_expressions() {
-        let result = HExprParser::parse_expr("(foo // this is a comment\n bar)").unwrap();
+        let result = HExprParser::parse_hexpr("(foo // this is a comment\n bar)").unwrap();
         assert_eq!(
             result,
             Hexpr::Composition(vec![

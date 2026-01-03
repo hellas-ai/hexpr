@@ -100,7 +100,7 @@ mod tests {
         );
 
         // Parse an expression that mixes frobenius (Unknown) with operations (Named)
-        let expr = HExprParser::parse_expr("([x . x x] +)").unwrap();
+        let expr = HExprParser::parse_hexpr("([x . x x] +)").unwrap();
         let mut graph = translate_expr_with_signature(&expr, signature).unwrap();
 
         // Before propagation, we should have both Unknown and Named nodes
@@ -126,7 +126,7 @@ mod tests {
     #[test]
     fn test_all_unknown_stays_unknown() {
         // Test that if all nodes in an equivalence class are Unknown, they stay Unknown
-        let expr = HExprParser::parse_expr("[x x . x]").unwrap();
+        let expr = HExprParser::parse_hexpr("[x x . x]").unwrap();
         let mut graph = translate_expr_with_signature(&expr, HashMap::new()).unwrap();
 
         // All nodes should be Unknown before propagation

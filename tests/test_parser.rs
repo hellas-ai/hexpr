@@ -3,7 +3,7 @@ use hexpr::parser::HExprParser;
 
 #[test]
 fn test_basic_frobenius_join() -> anyhow::Result<()> {
-    let result = HExprParser::parse_expr("[x x . x]").unwrap();
+    let result = HExprParser::parse_hexpr("[x x . x]").unwrap();
     let expected = Hexpr::Frobenius {
         sources: vec!["x".parse()?, "x".parse()?],
         targets: vec!["x".parse()?],
@@ -15,7 +15,7 @@ fn test_basic_frobenius_join() -> anyhow::Result<()> {
 
 #[test]
 fn test_basic_frobenius_split() -> anyhow::Result<()> {
-    let result = HExprParser::parse_expr("[x . x x]").unwrap();
+    let result = HExprParser::parse_hexpr("[x . x x]").unwrap();
     assert_eq!(
         result,
         Hexpr::Frobenius {
@@ -28,7 +28,7 @@ fn test_basic_frobenius_split() -> anyhow::Result<()> {
 
 #[test]
 fn test_identity_shorthand() -> anyhow::Result<()> {
-    let result = HExprParser::parse_expr("[x y]").unwrap();
+    let result = HExprParser::parse_hexpr("[x y]").unwrap();
     assert_eq!(
         result,
         Hexpr::Frobenius {
@@ -41,7 +41,7 @@ fn test_identity_shorthand() -> anyhow::Result<()> {
 
 #[test]
 fn test_named_identity() -> anyhow::Result<()> {
-    let result = HExprParser::parse_expr("[a]").unwrap();
+    let result = HExprParser::parse_hexpr("[a]").unwrap();
     assert_eq!(
         result,
         Hexpr::Frobenius {
@@ -54,7 +54,7 @@ fn test_named_identity() -> anyhow::Result<()> {
 
 #[test]
 fn test_identity_via_composition() -> anyhow::Result<()> {
-    let result = HExprParser::parse_expr("([x.][.x])").unwrap();
+    let result = HExprParser::parse_hexpr("([x.][.x])").unwrap();
     assert_eq!(
         result,
         Hexpr::Composition(vec![
@@ -73,7 +73,7 @@ fn test_identity_via_composition() -> anyhow::Result<()> {
 
 #[test]
 fn test_subtraction_pointfree() -> anyhow::Result<()> {
-    let result = HExprParser::parse_expr("({[a] -} +)").unwrap();
+    let result = HExprParser::parse_hexpr("({[a] -} +)").unwrap();
     assert_eq!(
         result,
         Hexpr::Composition(vec![
@@ -92,7 +92,7 @@ fn test_subtraction_pointfree() -> anyhow::Result<()> {
 
 #[test]
 fn test_subtraction_pointed() -> anyhow::Result<()> {
-    let result = HExprParser::parse_expr("([x y.] ([.y] - [z.]) [.x z] +)").unwrap();
+    let result = HExprParser::parse_hexpr("([x y.] ([.y] - [z.]) [.x z] +)").unwrap();
     assert_eq!(
         result,
         Hexpr::Composition(vec![
@@ -123,7 +123,7 @@ fn test_subtraction_pointed() -> anyhow::Result<()> {
 
 #[test]
 fn test_explicit_swap_relation() -> anyhow::Result<()> {
-    let result = HExprParser::parse_expr("[x y . y x]").unwrap();
+    let result = HExprParser::parse_hexpr("[x y . y x]").unwrap();
     assert_eq!(
         result,
         Hexpr::Frobenius {
@@ -136,7 +136,7 @@ fn test_explicit_swap_relation() -> anyhow::Result<()> {
 
 #[test]
 fn test_empty_inputs_outputs() {
-    let result = HExprParser::parse_expr("[.]").unwrap();
+    let result = HExprParser::parse_hexpr("[.]").unwrap();
     assert_eq!(
         result,
         Hexpr::Frobenius {
@@ -148,7 +148,7 @@ fn test_empty_inputs_outputs() {
 
 #[test]
 fn test_discard_variable() -> anyhow::Result<()> {
-    let result = HExprParser::parse_expr("[x .]").unwrap();
+    let result = HExprParser::parse_hexpr("[x .]").unwrap();
     assert_eq!(
         result,
         Hexpr::Frobenius {
@@ -161,7 +161,7 @@ fn test_discard_variable() -> anyhow::Result<()> {
 
 #[test]
 fn test_create_variable() -> anyhow::Result<()> {
-    let result = HExprParser::parse_expr("[. x]").unwrap();
+    let result = HExprParser::parse_hexpr("[. x]").unwrap();
     assert_eq!(
         result,
         Hexpr::Frobenius {
@@ -174,7 +174,7 @@ fn test_create_variable() -> anyhow::Result<()> {
 
 #[test]
 fn test_dispell_summon_named() -> anyhow::Result<()> {
-    let result = HExprParser::parse_expr("[a b . c]").unwrap();
+    let result = HExprParser::parse_hexpr("[a b . c]").unwrap();
     assert_eq!(
         result,
         Hexpr::Frobenius {
@@ -187,7 +187,7 @@ fn test_dispell_summon_named() -> anyhow::Result<()> {
 
 #[test]
 fn test_complex_composition() -> anyhow::Result<()> {
-    let result = HExprParser::parse_expr("(add sub mul)").unwrap();
+    let result = HExprParser::parse_hexpr("(add sub mul)").unwrap();
     assert_eq!(
         result,
         Hexpr::Composition(vec![
@@ -201,7 +201,7 @@ fn test_complex_composition() -> anyhow::Result<()> {
 
 #[test]
 fn test_complex_tensor() -> anyhow::Result<()> {
-    let result = HExprParser::parse_expr("{add sub mul}").unwrap();
+    let result = HExprParser::parse_hexpr("{add sub mul}").unwrap();
     assert_eq!(
         result,
         Hexpr::Tensor(vec![
@@ -215,7 +215,7 @@ fn test_complex_tensor() -> anyhow::Result<()> {
 
 #[test]
 fn test_nested_expressions() -> anyhow::Result<()> {
-    let result = HExprParser::parse_expr("({add} (sub mul))").unwrap();
+    let result = HExprParser::parse_hexpr("({add} (sub mul))").unwrap();
     assert_eq!(
         result,
         Hexpr::Composition(vec![
@@ -231,14 +231,14 @@ fn test_nested_expressions() -> anyhow::Result<()> {
 
 #[test]
 fn test_names_with_dashes_and_underscores() -> anyhow::Result<()> {
-    let result = HExprParser::parse_expr("my-operation_2").unwrap();
+    let result = HExprParser::parse_hexpr("my-operation_2").unwrap();
     assert_eq!(result, Hexpr::Operation("my-operation_2".parse()?));
     Ok(())
 }
 
 #[test]
 fn test_whitespace_handling() -> anyhow::Result<()> {
-    let result = HExprParser::parse_expr("  ( add   sub  )  ").unwrap();
+    let result = HExprParser::parse_hexpr("  ( add   sub  )  ").unwrap();
     assert_eq!(
         result,
         Hexpr::Composition(vec![
@@ -251,8 +251,8 @@ fn test_whitespace_handling() -> anyhow::Result<()> {
 
 #[test]
 fn test_invalid_syntax() {
-    assert!(HExprParser::parse_expr("(").is_err());
-    assert!(HExprParser::parse_expr("[").is_err());
-    assert!(HExprParser::parse_expr("{").is_err());
-    assert!(HExprParser::parse_expr("").is_err());
+    assert!(HExprParser::parse_hexpr("(").is_err());
+    assert!(HExprParser::parse_hexpr("[").is_err());
+    assert!(HExprParser::parse_hexpr("{").is_err());
+    assert!(HExprParser::parse_hexpr("").is_err());
 }

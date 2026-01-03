@@ -300,7 +300,7 @@ mod tests {
             OperationType::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         );
 
-        let expr = HExprParser::parse_expr("add").unwrap();
+        let expr = HExprParser::parse_hexpr("add").unwrap();
         let result = translate_expr_with_signature(&expr, signature);
         assert!(result.is_ok());
     }
@@ -309,7 +309,7 @@ mod tests {
     fn test_translate_frobenius_join() {
         use std::collections::HashMap;
 
-        let expr = HExprParser::parse_expr("[x x . x]").unwrap();
+        let expr = HExprParser::parse_hexpr("[x x . x]").unwrap();
         let signature = HashMap::new(); // Empty signature for pure frobenius
         let result = translate_expr_with_signature(&expr, signature);
         assert!(result.is_ok());
@@ -331,7 +331,7 @@ mod tests {
             OperationType::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         );
 
-        let expr = HExprParser::parse_expr("(copy add)").unwrap();
+        let expr = HExprParser::parse_hexpr("(copy add)").unwrap();
         let result = translate_expr_with_signature(&expr, signature);
         assert!(result.is_ok());
     }
@@ -351,7 +351,7 @@ mod tests {
             OperationType::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         );
 
-        let expr = HExprParser::parse_expr("{add sub}").unwrap();
+        let expr = HExprParser::parse_hexpr("{add sub}").unwrap();
         let result = translate_expr_with_signature(&expr, signature);
         assert!(result.is_ok());
     }
@@ -371,7 +371,7 @@ mod tests {
             OperationType::new(vec![obj.clone(), obj.clone()], vec![obj.clone()]),
         ); // 2->1
 
-        let expr = HExprParser::parse_expr("(copy +)").unwrap();
+        let expr = HExprParser::parse_hexpr("(copy +)").unwrap();
         let result = translate_expr_with_signature(&expr, signature);
         assert!(result.is_ok());
 
@@ -400,12 +400,12 @@ mod tests {
         ); // 1->1
 
         // Test that copy (1->2) followed by + (2->1) works properly
-        let expr = HExprParser::parse_expr("(copy +)").unwrap();
+        let expr = HExprParser::parse_hexpr("(copy +)").unwrap();
         let result = translate_expr_with_signature(&expr, signature.clone());
         assert!(result.is_ok());
 
         // Test a composition mismatch - this should fail
-        let expr = HExprParser::parse_expr("({copy neg} +)").unwrap();
+        let expr = HExprParser::parse_hexpr("({copy neg} +)").unwrap();
         let result = translate_expr_with_signature(&expr, signature);
         // copy (1->2) tensored with neg (1->1) = 3 outputs, but + expects 2 inputs
         assert!(result.is_err());
@@ -436,7 +436,7 @@ mod tests {
             ),
         );
 
-        let expr = HExprParser::parse_expr("(triple merge3)").unwrap();
+        let expr = HExprParser::parse_hexpr("(triple merge3)").unwrap();
         let result = translate_expr_with_signature(&expr, signature);
         assert!(result.is_ok());
     }
@@ -447,7 +447,7 @@ mod tests {
 
         let signature = HashMap::new(); // Empty signature
 
-        let expr = HExprParser::parse_expr("unknown_op").unwrap();
+        let expr = HExprParser::parse_hexpr("unknown_op").unwrap();
         let result = translate_expr_with_signature(&expr, signature);
         assert!(result.is_err());
 

@@ -120,7 +120,7 @@ fn main() {
         input.clone()
     };
 
-    match HExprParser::parse_expr(&expr_str) {
+    match HExprParser::parse_hexpr(&expr_str) {
         Ok(expr) => {
             if debug {
                 println!("Debug AST: {:#?}", expr);
@@ -209,13 +209,13 @@ mod integration_tests {
 
     #[test]
     fn test_cli_basic_parsing() {
-        let expr = HExprParser::parse_expr("[x x . x]").unwrap();
+        let expr = HExprParser::parse_hexpr("[x x . x]").unwrap();
         assert!(matches!(expr, Hexpr::Frobenius { .. }));
     }
 
     #[test]
     fn test_cli_complex_expression() {
-        let expr = HExprParser::parse_expr("({[a] -} +)").unwrap();
+        let expr = HExprParser::parse_hexpr("({[a] -} +)").unwrap();
         assert!(matches!(expr, Hexpr::Composition(_)));
     }
 }

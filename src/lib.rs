@@ -41,7 +41,7 @@ pub fn parse(
 ) -> Result<OpenHypergraph<String, String>, Box<dyn std::error::Error>> {
     // Step 1: Parse the H-expression string
     let expr =
-        HExprParser::parse_expr(hexpr).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+        HExprParser::parse_hexpr(hexpr).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
 
     // Step 2: Convert String signature to HObject signature
     let hobject_signature: HashMap<String, OperationType<HObject>> = signature
