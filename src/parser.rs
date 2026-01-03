@@ -27,22 +27,15 @@ fn parse_hexpr(pair: pest::iterators::Pair<Rule>) -> Hexpr {
 }
 
 fn parse_frobenius(pair: pest::iterators::Pair<Rule>) -> Hexpr {
-    let inner = pair.into_inner().next().unwrap();
-    match inner.as_rule() {
-        Rule::frobenius_full => {
-            let parts: Vec<_> = inner.into_inner().collect();
-            let dot_pos = parts.iter().position(|p| p.as_rule() == Rule::dot).unwrap();
-            let sources = parts[..dot_pos].iter().map(|p| parse_variable(p.clone())).collect();
-            let targets = parts[dot_pos + 1..].iter().map(|p| parse_variable(p.clone())).collect();
-            Hexpr::Frobenius { sources, targets }
-        }
-        Rule::frobenius_identity => {
-            let sources: Vec<Variable> = inner.into_inner().map(parse_variable).collect();
-            let targets = sources.clone();
-            Hexpr::Frobenius { sources, targets }
-        }
-        _ => unreachable!(),
-    }
+    let mut it = pair.into_inner();
+    let sources = parse_vars(it.next().unwrap());
+    let targets = it.next().map(parse_vars).unwrap_or_else(|| sources.clone());
+    Hexpr::Frobenius { sources, targets }
+}
+
+fn parse_vars(pair: pest::iterators::Pair<Rule>) -> Vec<Variable> {
+    debug_assert_eq!(pair.as_rule(), Rule::vars);
+    pair.into_inner().map(parse_variable).collect()
 }
 
 fn parse_variable(pair: pest::iterators::Pair<Rule>) -> Variable {

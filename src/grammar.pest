@@ -14,14 +14,9 @@ composition = { "(" ~ hexpr+ ~ ")" }
 
 tensor = { "{" ~ hexpr+ ~ "}" }
 
-frobenius = {
-    frobenius_full
-  | frobenius_identity
-}
+frobenius = { "[" ~ vars ~ ( "." ~ vars)? ~ "]" }
 
-frobenius_full = { "[" ~ variable* ~ dot ~ variable* ~ "]" }
-dot = { "." }
-frobenius_identity = { "[" ~ variable* ~ "]" }
+vars = { variable* }
 
 operation = @{ (ASCII_ALPHANUMERIC | "-" | "_" | "." | "*" | "+" | "/" | "|")+ }
 
