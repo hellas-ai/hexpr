@@ -30,28 +30,10 @@ fn parse_frobenius(pair: pest::iterators::Pair<Rule>) -> Hexpr {
     let inner = pair.into_inner().next().unwrap();
     match inner.as_rule() {
         Rule::frobenius_full => {
-            let variables = inner.into_inner();
-            let mut sources = Vec::new();
-            let mut targets = Vec::new();
-            let mut parsing_outputs = false;
-
-            for var_pair in variables {
-                match var_pair.as_rule() {
-                    Rule::dot => {
-                        parsing_outputs = true;
-                    }
-                    Rule::variable => {
-                        let variable = parse_variable(var_pair);
-                        if parsing_outputs {
-                            targets.push(variable);
-                        } else {
-                            sources.push(variable);
-                        }
-                    }
-                    _ => {}
-                }
-            }
-
+            let parts: Vec<_> = inner.into_inner().collect();
+            let dot_pos = parts.iter().position(|p| p.as_rule() == Rule::dot).unwrap();
+            let sources = parts[..dot_pos].iter().map(|p| parse_variable(p.clone())).collect();
+            let targets = parts[dot_pos + 1..].iter().map(|p| parse_variable(p.clone())).collect();
             Hexpr::Frobenius { sources, targets }
         }
         Rule::frobenius_identity => {
