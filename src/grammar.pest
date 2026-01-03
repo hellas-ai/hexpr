@@ -17,13 +17,11 @@ tensor = { "{" ~ hexpr+ ~ "}" }
 frobenius = {
     frobenius_full
   | frobenius_identity
-  | frobenius_empty
 }
 
 frobenius_full = { "[" ~ variable* ~ dot ~ variable* ~ "]" }
 dot = { "." }
-frobenius_identity = { "[" ~ variable+ ~ "]" }
-frobenius_empty = { "[" ~ "]" }
+frobenius_identity = { "[" ~ variable* ~ "]" }
 
 operation = @{ (ASCII_ALPHANUMERIC | "-" | "_" | "." | "*" | "+" | "/" | "|")+ }
 

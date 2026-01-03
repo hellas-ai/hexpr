@@ -66,13 +66,13 @@ impl std::error::Error for TranslationError {}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OperationType<O> {
-    pub inputs: Vec<O>,
-    pub outputs: Vec<O>,
+    pub sources: Vec<O>,
+    pub targets: Vec<O>,
 }
 
 impl<O> OperationType<O> {
-    pub fn new(inputs: Vec<O>, outputs: Vec<O>) -> Self {
-        Self { inputs, outputs }
+    pub fn new(sources: Vec<O>, targets: Vec<O>) -> Self {
+        Self { sources, targets }
     }
 }
 
@@ -111,8 +111,8 @@ impl Translator {
     ) -> Result<(Vec<NodeId>, Vec<NodeId>), TranslationError> {
         match expr {
             Hexpr::Operation(Operation(name)) => self.translate_operation(name, graph),
-            Hexpr::Frobenius { inputs, outputs } => {
-                self.translate_frobenius(inputs, outputs, graph)
+            Hexpr::Frobenius { sources, targets } => {
+                self.translate_frobenius(sources, targets, graph)
             }
             Hexpr::Composition(exprs) => self.translate_composition(exprs, graph),
             Hexpr::Tensor(exprs) => self.translate_tensor(exprs, graph),
@@ -135,14 +135,14 @@ impl Translator {
 
         // Create input nodes
         let input_nodes: Vec<NodeId> = signature
-            .inputs
+            .sources
             .iter()
             .map(|obj| graph.new_node(obj.clone()))
             .collect();
 
         // Create output nodes
         let output_nodes: Vec<NodeId> = signature
-            .outputs
+            .targets
             .iter()
             .map(|obj| graph.new_node(obj.clone()))
             .collect();
@@ -159,18 +159,18 @@ impl Translator {
 
     fn translate_frobenius(
         &mut self,
-        inputs: &[Variable],
-        outputs: &[Variable],
+        sources: &[Variable],
+        targets: &[Variable],
         graph: &mut OpenHypergraph<HObject, HOperation>,
     ) -> Result<(Vec<NodeId>, Vec<NodeId>), TranslationError> {
         // Frobenius relations create pure unification structures without operations
         // For [x x . x]: create 3 nodes, then unify them all via the quotient map
 
-        let input_nodes = self.process_frobenius_variables(inputs, graph);
-        let output_nodes = self.process_frobenius_variables(outputs, graph);
+        let source_nodes = self.process_frobenius_variables(sources, graph);
+        let target_nodes = self.process_frobenius_variables(targets, graph);
 
         // No operation edge created - this is pure structural unification
-        Ok((input_nodes, output_nodes))
+        Ok((source_nodes, target_nodes))
     }
 
     fn process_frobenius_variables(

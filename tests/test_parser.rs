@@ -5,8 +5,8 @@ use hexpr::parser::HExprParser;
 fn test_basic_frobenius_join() -> anyhow::Result<()> {
     let result = HExprParser::parse_expr("[x x . x]").unwrap();
     let expected = Hexpr::Frobenius {
-        inputs: vec!["x".parse()?, "x".parse()?],
-        outputs: vec!["x".parse()?],
+        sources: vec!["x".parse()?, "x".parse()?],
+        targets: vec!["x".parse()?],
     };
 
     assert_eq!(result, expected);
@@ -19,8 +19,8 @@ fn test_basic_frobenius_split() -> anyhow::Result<()> {
     assert_eq!(
         result,
         Hexpr::Frobenius {
-            inputs: vec!["x".parse()?],
-            outputs: vec!["x".parse()?, "x".parse()?],
+            sources: vec!["x".parse()?],
+            targets: vec!["x".parse()?, "x".parse()?],
         }
     );
     Ok(())
@@ -32,8 +32,8 @@ fn test_identity_shorthand() -> anyhow::Result<()> {
     assert_eq!(
         result,
         Hexpr::Frobenius {
-            inputs: vec!["x".parse()?, "y".parse()?],
-            outputs: vec!["x".parse()?, "y".parse()?],
+            sources: vec!["x".parse()?, "y".parse()?],
+            targets: vec!["x".parse()?, "y".parse()?],
         }
     );
     Ok(())
@@ -45,8 +45,8 @@ fn test_named_identity() -> anyhow::Result<()> {
     assert_eq!(
         result,
         Hexpr::Frobenius {
-            inputs: vec!["a".parse()?],
-            outputs: vec!["a".parse()?],
+            sources: vec!["a".parse()?],
+            targets: vec!["a".parse()?],
         }
     );
     Ok(())
@@ -59,12 +59,12 @@ fn test_identity_via_composition() -> anyhow::Result<()> {
         result,
         Hexpr::Composition(vec![
             Hexpr::Frobenius {
-                inputs: vec!["x".parse()?],
-                outputs: vec![],
+                sources: vec!["x".parse()?],
+                targets: vec![],
             },
             Hexpr::Frobenius {
-                inputs: vec![],
-                outputs: vec!["x".parse()?],
+                sources: vec![],
+                targets: vec!["x".parse()?],
             },
         ])
     );
@@ -79,8 +79,8 @@ fn test_subtraction_pointfree() -> anyhow::Result<()> {
         Hexpr::Composition(vec![
             Hexpr::Tensor(vec![
                 Hexpr::Frobenius {
-                    inputs: vec!["a".parse()?],
-                    outputs: vec!["a".parse()?],
+                    sources: vec!["a".parse()?],
+                    targets: vec!["a".parse()?],
                 },
                 Hexpr::Operation("-".parse()?),
             ]),
@@ -97,23 +97,23 @@ fn test_subtraction_pointed() -> anyhow::Result<()> {
         result,
         Hexpr::Composition(vec![
             Hexpr::Frobenius {
-                inputs: vec!["x".parse()?, "y".parse()?],
-                outputs: vec![],
+                sources: vec!["x".parse()?, "y".parse()?],
+                targets: vec![],
             },
             Hexpr::Composition(vec![
                 Hexpr::Frobenius {
-                    inputs: vec![],
-                    outputs: vec!["y".parse()?],
+                    sources: vec![],
+                    targets: vec!["y".parse()?],
                 },
                 Hexpr::Operation("-".parse()?),
                 Hexpr::Frobenius {
-                    inputs: vec!["z".parse()?],
-                    outputs: vec![],
+                    sources: vec!["z".parse()?],
+                    targets: vec![],
                 },
             ]),
             Hexpr::Frobenius {
-                inputs: vec![],
-                outputs: vec!["x".parse()?, "z".parse()?],
+                sources: vec![],
+                targets: vec!["x".parse()?, "z".parse()?],
             },
             Hexpr::Operation("+".parse()?),
         ])
@@ -127,8 +127,8 @@ fn test_explicit_swap_relation() -> anyhow::Result<()> {
     assert_eq!(
         result,
         Hexpr::Frobenius {
-            inputs: vec!["x".parse()?, "y".parse()?],
-            outputs: vec!["y".parse()?, "x".parse()?],
+            sources: vec!["x".parse()?, "y".parse()?],
+            targets: vec!["y".parse()?, "x".parse()?],
         }
     );
     Ok(())
@@ -140,8 +140,8 @@ fn test_empty_inputs_outputs() {
     assert_eq!(
         result,
         Hexpr::Frobenius {
-            inputs: vec![],
-            outputs: vec![],
+            sources: vec![],
+            targets: vec![],
         }
     );
 }
@@ -152,8 +152,8 @@ fn test_discard_variable() -> anyhow::Result<()> {
     assert_eq!(
         result,
         Hexpr::Frobenius {
-            inputs: vec!["x".parse()?],
-            outputs: vec![],
+            sources: vec!["x".parse()?],
+            targets: vec![],
         }
     );
     Ok(())
@@ -165,8 +165,8 @@ fn test_create_variable() -> anyhow::Result<()> {
     assert_eq!(
         result,
         Hexpr::Frobenius {
-            inputs: vec![],
-            outputs: vec!["x".parse()?],
+            sources: vec![],
+            targets: vec!["x".parse()?],
         }
     );
     Ok(())
@@ -178,8 +178,8 @@ fn test_dispell_summon_named() -> anyhow::Result<()> {
     assert_eq!(
         result,
         Hexpr::Frobenius {
-            inputs: vec!["a".parse()?, "b".parse()?],
-            outputs: vec!["c".parse()?],
+            sources: vec!["a".parse()?, "b".parse()?],
+            targets: vec!["c".parse()?],
         }
     );
     Ok(())

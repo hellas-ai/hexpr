@@ -11,8 +11,8 @@ pub enum Hexpr {
     Tensor(Vec<Hexpr>),
     /// A Frobenius spider
     Frobenius {
-        inputs: Vec<Variable>,
-        outputs: Vec<Variable>,
+        sources: Vec<Variable>,
+        targets: Vec<Variable>,
     },
     /// A named operation
     Operation(Operation),
@@ -81,20 +81,20 @@ impl std::fmt::Display for Hexpr {
                 }
                 write!(f, "}}")
             }
-            Hexpr::Frobenius { inputs, outputs } => {
+            Hexpr::Frobenius { sources, targets } => {
                 // Special case for empty frobenius
-                if inputs.is_empty() && outputs.is_empty() {
+                if sources.is_empty() && targets.is_empty() {
                     write!(f, "[]")
                 } else {
                     write!(f, "[")?;
-                    for (i, var) in inputs.iter().enumerate() {
+                    for (i, var) in sources.iter().enumerate() {
                         if i > 0 {
                             write!(f, " ")?;
                         }
                         write!(f, "{}", var)?;
                     }
                     write!(f, " . ")?;
-                    for (i, var) in outputs.iter().enumerate() {
+                    for (i, var) in targets.iter().enumerate() {
                         if i > 0 {
                             write!(f, " ")?;
                         }

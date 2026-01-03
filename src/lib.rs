@@ -47,9 +47,9 @@ pub fn parse(
     let hobject_signature: HashMap<String, OperationType<HObject>> = signature
         .into_iter()
         .map(|(name, op_type)| {
-            let inputs = op_type.inputs.into_iter().map(HObject::from).collect();
-            let outputs = op_type.outputs.into_iter().map(HObject::from).collect();
-            (name, OperationType::new(inputs, outputs))
+            let sources = op_type.sources.into_iter().map(HObject::from).collect();
+            let targets = op_type.targets.into_iter().map(HObject::from).collect();
+            (name, OperationType::new(sources, targets))
         })
         .collect();
 

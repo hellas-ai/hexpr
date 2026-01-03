@@ -20,58 +20,50 @@ fn parse_hexpr(pair: pest::iterators::Pair<Rule>) -> Hexpr {
         Rule::hexpr => pair.into_inner().map(parse_hexpr).next().unwrap(),
         Rule::composition => Hexpr::Composition(pair.into_inner().map(parse_hexpr).collect()),
         Rule::tensor => Hexpr::Tensor(pair.into_inner().map(parse_hexpr).collect()),
-        Rule::frobenius => {
-            let inner = pair.into_inner().next().unwrap();
-            match inner.as_rule() {
-                Rule::frobenius_full => {
-                    let variables = inner.into_inner();
-                    let mut inputs = Vec::new();
-                    let mut outputs = Vec::new();
-                    let mut parsing_outputs = false;
+        Rule::frobenius => parse_frobenius(pair),
+        Rule::operation => Hexpr::Operation(Operation(pair.as_str().to_string())),
+        _ => unreachable!(),
+    }
+}
 
-                    for var_pair in variables {
-                        match var_pair.as_rule() {
-                            Rule::dot => {
-                                parsing_outputs = true;
-                            }
-                            Rule::variable => {
-                                let variable = build_variable(var_pair);
-                                if parsing_outputs {
-                                    outputs.push(variable);
-                                } else {
-                                    inputs.push(variable);
-                                }
-                            }
-                            _ => {}
+fn parse_frobenius(pair: pest::iterators::Pair<Rule>) -> Hexpr {
+    let inner = pair.into_inner().next().unwrap();
+    match inner.as_rule() {
+        Rule::frobenius_full => {
+            let variables = inner.into_inner();
+            let mut sources = Vec::new();
+            let mut targets = Vec::new();
+            let mut parsing_outputs = false;
+
+            for var_pair in variables {
+                match var_pair.as_rule() {
+                    Rule::dot => {
+                        parsing_outputs = true;
+                    }
+                    Rule::variable => {
+                        let variable = parse_variable(var_pair);
+                        if parsing_outputs {
+                            targets.push(variable);
+                        } else {
+                            sources.push(variable);
                         }
                     }
-
-                    Hexpr::Frobenius { inputs, outputs }
+                    _ => {}
                 }
-                Rule::frobenius_identity => {
-                    let variables: Vec<Variable> = inner.into_inner().map(build_variable).collect();
-
-                    Hexpr::Frobenius {
-                        inputs: variables.clone(),
-                        outputs: variables,
-                    }
-                }
-                Rule::frobenius_empty => Hexpr::Frobenius {
-                    inputs: Vec::new(),
-                    outputs: Vec::new(),
-                },
-                _ => unreachable!(),
             }
+
+            Hexpr::Frobenius { sources, targets }
         }
-        Rule::operation => {
-            let name = pair.as_str();
-            Hexpr::Operation(Operation(name.to_string()))
+        Rule::frobenius_identity => {
+            let sources: Vec<Variable> = inner.into_inner().map(parse_variable).collect();
+            let targets = sources.clone();
+            Hexpr::Frobenius { sources, targets }
         }
         _ => unreachable!(),
     }
 }
 
-fn build_variable(pair: pest::iterators::Pair<Rule>) -> Variable {
+fn parse_variable(pair: pest::iterators::Pair<Rule>) -> Variable {
     match pair.as_rule() {
         Rule::variable => Variable(pair.as_str().to_string()),
         _ => unreachable!(),
@@ -95,8 +87,8 @@ mod tests {
         assert_eq!(
             result,
             Hexpr::Frobenius {
-                inputs: vec![Variable("x".to_string())],
-                outputs: vec![Variable("x".to_string())],
+                sources: vec![Variable("x".to_string())],
+                targets: vec![Variable("x".to_string())],
             }
         );
     }
@@ -107,8 +99,8 @@ mod tests {
         assert_eq!(
             result,
             Hexpr::Frobenius {
-                inputs: vec![Variable("x".to_string()), Variable("x".to_string())],
-                outputs: vec![Variable("x".to_string())],
+                sources: vec![Variable("x".to_string()), Variable("x".to_string())],
+                targets: vec![Variable("x".to_string())],
             }
         );
     }
@@ -143,8 +135,8 @@ mod tests {
         assert_eq!(
             result,
             Hexpr::Frobenius {
-                inputs: vec![],
-                outputs: vec![],
+                sources: vec![],
+                targets: vec![],
             }
         );
     }
