@@ -11,24 +11,15 @@ impl HExprParser {
         let pairs = HExprParser::parse(Rule::program, input)?;
         let program = pairs.into_iter().next().unwrap();
         let expr_pair = program.into_inner().next().unwrap();
-        Ok(build_expr(expr_pair))
+        Ok(parse_hexpr(expr_pair))
     }
 }
 
-fn build_expr(pair: pest::iterators::Pair<Rule>) -> Hexpr {
+fn parse_hexpr(pair: pest::iterators::Pair<Rule>) -> Hexpr {
     match pair.as_rule() {
-        Rule::hexpr => {
-            let inner = pair.into_inner().next().unwrap();
-            build_expr(inner)
-        }
-        Rule::composition => {
-            let exprs = pair.into_inner().map(build_expr).collect();
-            Hexpr::Composition(exprs)
-        }
-        Rule::tensor => {
-            let exprs = pair.into_inner().map(build_expr).collect();
-            Hexpr::Tensor(exprs)
-        }
+        Rule::hexpr => pair.into_inner().map(parse_hexpr).next().unwrap(),
+        Rule::composition => Hexpr::Composition(pair.into_inner().map(parse_hexpr).collect()),
+        Rule::tensor => Hexpr::Tensor(pair.into_inner().map(parse_hexpr).collect()),
         Rule::frobenius => {
             let inner = pair.into_inner().next().unwrap();
             match inner.as_rule() {
@@ -155,6 +146,18 @@ mod tests {
                 inputs: vec![],
                 outputs: vec![],
             }
+        );
+    }
+
+    #[test]
+    fn test_comments_in_expressions() {
+        let result = HExprParser::parse_expr("(foo // this is a comment\n bar)").unwrap();
+        assert_eq!(
+            result,
+            Hexpr::Composition(vec![
+                Hexpr::Operation(Operation("foo".to_string())),
+                Hexpr::Operation(Operation("bar".to_string())),
+            ])
         );
     }
 }
