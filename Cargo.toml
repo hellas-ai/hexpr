@@ -1,6 +1,6 @@
 [package]
 name = "hexpr"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 description = "H-Expressions: A compact syntax for open hypergraphs"
 license = "MIT OR Apache-2.0"
@@ -19,3 +19,4 @@ serde_json = "1.0"
 
 [dev-dependencies]
 anyhow = "1.0.100"
+thiserror = "2.0.17"
