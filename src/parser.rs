@@ -2,16 +2,31 @@ use crate::ast::{Hexpr, Operation, Variable};
 use pest::{error::Error, Parser};
 use pest_derive::Parser;
 
+/// Parse multiple H-expressions from a string
+pub fn parse_hexprs(input: &str) -> Result<Vec<Hexpr>, Error<Rule>> {
+    HExprParser::parse_hexprs(input)
+}
+
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
 pub struct HExprParser;
 
 impl HExprParser {
     pub fn parse_hexpr(input: &str) -> Result<Hexpr, Error<Rule>> {
-        let pairs = HExprParser::parse(Rule::program, input)?;
-        let program = pairs.into_iter().next().unwrap();
-        let expr_pair = program.into_inner().next().unwrap();
+        let pairs = HExprParser::parse(Rule::one_hexpr, input)?;
+        let one_hexpr = pairs.into_iter().next().unwrap();
+        let expr_pair = one_hexpr.into_inner().next().unwrap();
         Ok(parse_hexpr(expr_pair))
+    }
+
+    pub fn parse_hexprs(input: &str) -> Result<Vec<Hexpr>, Error<Rule>> {
+        let pairs = HExprParser::parse(Rule::hexprs, input)?;
+        let hexprs = pairs.into_iter().next().unwrap();
+        Ok(hexprs
+            .into_inner()
+            .filter(|p| p.as_rule() == Rule::hexpr)
+            .map(parse_hexpr)
+            .collect())
     }
 }
 
@@ -22,7 +37,7 @@ fn parse_hexpr(pair: pest::iterators::Pair<Rule>) -> Hexpr {
         Rule::tensor => Hexpr::Tensor(pair.into_inner().map(parse_hexpr).collect()),
         Rule::frobenius => parse_frobenius(pair),
         Rule::operation => Hexpr::Operation(Operation(pair.as_str().to_string())),
-        _ => unreachable!(),
+        x => panic!("unreachable: {:?}", x),
     }
 }
 
@@ -41,7 +56,7 @@ fn parse_vars(pair: pest::iterators::Pair<Rule>) -> Vec<Variable> {
 fn parse_variable(pair: pest::iterators::Pair<Rule>) -> Variable {
     match pair.as_rule() {
         Rule::variable => Variable(pair.as_str().to_string()),
-        _ => unreachable!(),
+        x => panic!("unreachable: {:?}", x),
     }
 }
 

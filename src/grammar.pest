@@ -1,7 +1,8 @@
 WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
 COMMENT = _{ "//" ~ (!"\n" ~ ANY)* }
 
-program = { SOI ~ hexpr ~ EOI }
+hexprs = { SOI ~ hexpr* ~ EOI }
+one_hexpr = { SOI ~ hexpr ~ EOI }
 
 hexpr = {
     composition

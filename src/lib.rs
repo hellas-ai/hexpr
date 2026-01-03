@@ -6,6 +6,7 @@ pub mod translate;
 pub use ast::{Hexpr, Variable};
 pub use inference::propagate_object_labels;
 pub use parser::HExprParser;
+
 pub use translate::{
     to_svg, translate_expr_with_signature, HObject, HOperation, OperationType, TranslationError,
     Translator,
@@ -13,6 +14,8 @@ pub use translate::{
 
 use open_hypergraphs::lax::{Hypergraph, OpenHypergraph};
 use std::collections::HashMap;
+
+pub use parser::parse_hexprs;
 
 /// Parse an H-Expression, translate to an open hypergraph using the supplied signature, then
 /// resolve unknown labels using type inference.
