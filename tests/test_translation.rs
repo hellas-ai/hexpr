@@ -45,10 +45,12 @@ impl Signature<()> for ArithOp {
 fn test_simple_operation() -> anyhow::Result<()> {
     let hexpr = "add".parse()?;
     let result: OpenHypergraph<Option<()>, ArithOp> = try_interpret(&hexpr)?;
+    let result = unify(result)?;
 
     assert_eq!(result.sources.len(), 2);
     assert_eq!(result.targets.len(), 1);
     assert_eq!(result.hypergraph.edges.len(), 1);
+    assert_eq!(result.hypergraph.nodes.len(), 3);
 
     Ok(())
 }
@@ -57,10 +59,12 @@ fn test_simple_operation() -> anyhow::Result<()> {
 fn test_composition() -> anyhow::Result<()> {
     let hexpr = "(add neg)".parse()?;
     let result: OpenHypergraph<Option<()>, ArithOp> = try_interpret(&hexpr)?;
+    let result = unify(result)?;
 
     assert_eq!(result.sources.len(), 2);
     assert_eq!(result.targets.len(), 1);
     assert_eq!(result.hypergraph.edges.len(), 2);
+    assert_eq!(result.hypergraph.nodes.len(), 4);
 
     Ok(())
 }
@@ -69,9 +73,14 @@ fn test_composition() -> anyhow::Result<()> {
 fn test_frobenius() -> anyhow::Result<()> {
     let hexpr = "[x y . x]".parse()?;
     let result: OpenHypergraph<Option<()>, ArithOp> = try_interpret(&hexpr)?;
+
     assert_eq!(result.sources.len(), 2);
     assert_eq!(result.targets.len(), 1);
     assert_eq!(result.hypergraph.edges.len(), 0);
+    assert_eq!(result.hypergraph.nodes.len(), 2);
+
+    // We have no annotations, so unification should fail
+    assert!(unify(result).is_err());
 
     Ok(())
 }
@@ -80,7 +89,7 @@ fn test_frobenius() -> anyhow::Result<()> {
 fn test_all() -> anyhow::Result<()> {
     let hexpr = "({[x y . x] neg} add neg [y])".parse()?;
     let result: OpenHypergraph<Option<()>, ArithOp> = try_interpret(&hexpr)?;
-    let mut result = result.map_nodes(|_| ()); // erase None nodes
+    let mut result = unify(result)?;
 
     // NOTE: this will panic if nodes cannot be quotiented!
     result.quotient();
