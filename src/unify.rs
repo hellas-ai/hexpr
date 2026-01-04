@@ -1,6 +1,6 @@
 use open_hypergraphs::lax::OpenHypergraph;
 
-/// Unify the variables of an unquotiented
+/// Unify the variables of an unquotiented open hypergraph with nodes labels `Option<O>`.
 pub fn unify<O: Clone + PartialEq, A: Clone>(
     f: OpenHypergraph<Option<O>, A>,
 ) -> Option<OpenHypergraph<O, A>> {
@@ -20,7 +20,7 @@ pub fn unify<O: Clone + PartialEq, A: Clone>(
             (None, _) => (),
             // If x != u, unification error
             (Some(x), Some(u)) => {
-                if x == u {
+                if x != u {
                     return None;
                 }
             }

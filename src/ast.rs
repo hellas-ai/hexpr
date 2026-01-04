@@ -22,6 +22,12 @@ pub enum Hexpr {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Operation(pub(crate) String);
 
+impl Operation {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
 /// Variable names in a Frobenius expression. Must match `[a-zA-Z0-9-_]+`.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Variable(pub(crate) String);
