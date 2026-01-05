@@ -19,7 +19,7 @@ pub enum Hexpr {
 }
 
 /// Operation names, must match [a-zA-Z0-9-_.*+-/|]+
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Operation(pub(crate) String);
 
 impl Operation {
