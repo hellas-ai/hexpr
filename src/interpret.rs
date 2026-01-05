@@ -7,12 +7,15 @@ use open_hypergraphs::lax::{Interface, NodeId, OpenHypergraph};
 use crate::ast::{Hexpr, Operation, Variable};
 
 /// A `Signature` is:
-///  - a way to extract names from operations
-//   - Exact arity/coarity
-//   - *Partial* input/output type labels
-pub trait Signature<T>: for<'a> TryFrom<&'a Operation> {
-    fn source(&self) -> Vec<Option<T>>;
-    fn target(&self) -> Vec<Option<T>>;
+///  - A way to parse operations
+///   - A profile: a source/target type for each arrow
+pub trait Signature {
+    type Arr;
+    type Obj;
+    type Error;
+
+    fn try_parse_op(&self, op: &Operation) -> Result<Self::Arr, Self::Error>;
+    fn profile(&self, op: &Self::Arr) -> (Vec<Option<Self::Obj>>, Vec<Option<Self::Obj>>);
 }
 
 #[derive(Debug)]
@@ -23,22 +26,24 @@ pub enum Error<E> {
     Signature(Operation, E),
 }
 
-pub fn try_interpret<O, A: Signature<O>>(
+pub fn try_interpret<S: Signature>(
+    signature: &S,
     hexpr: &Hexpr,
-) -> Result<OpenHypergraph<Option<O>, A>, Error<<A as TryFrom<&Operation>>::Error>> {
+) -> Result<OpenHypergraph<Option<S::Obj>, S::Arr>, Error<S::Error>> {
     let mut state = OpenHypergraph::empty();
     let mut env = HashMap::new();
-    let (sources, targets) = try_interpret_stack(&mut state, &mut env, hexpr)?;
+    let (sources, targets) = try_interpret_stack(signature, &mut state, &mut env, hexpr)?;
     state.sources = sources;
     state.targets = targets;
     Ok(state)
 }
 
-fn try_interpret_stack<'a, O, A: Signature<O>>(
-    state: &mut OpenHypergraph<Option<O>, A>,
+fn try_interpret_stack<S: Signature>(
+    signature: &S,
+    state: &mut OpenHypergraph<Option<S::Obj>, S::Arr>,
     env: &mut HashMap<Variable, NodeId>,
-    hexpr: &'a Hexpr,
-) -> Result<Interface, Error<<A as TryFrom<&'a Operation>>::Error>> {
+    hexpr: &Hexpr,
+) -> Result<Interface, Error<S::Error>> {
     match hexpr {
         Hexpr::Composition(hexprs) => {
             let mut iter = hexprs.into_iter();
@@ -47,9 +52,10 @@ fn try_interpret_stack<'a, O, A: Signature<O>>(
                 None => return Ok((vec![], vec![])),
             };
 
-            let (sources, mut current_targets) = try_interpret_stack(state, env, hexpr)?;
+            let (sources, mut current_targets) = try_interpret_stack(signature, state, env, hexpr)?;
             for next_hexpr in iter {
-                let (next_sources, next_targets) = try_interpret_stack(state, env, next_hexpr)?;
+                let (next_sources, next_targets) =
+                    try_interpret_stack(signature, state, env, next_hexpr)?;
 
                 // Check if targets of current match sources of next
                 if current_targets.len() != next_sources.len() {
@@ -73,7 +79,7 @@ fn try_interpret_stack<'a, O, A: Signature<O>>(
             let mut all_targets = vec![];
 
             for hexpr in hexprs {
-                let (sources, targets) = try_interpret_stack(state, env, hexpr)?;
+                let (sources, targets) = try_interpret_stack(signature, state, env, hexpr)?;
                 all_sources.extend(sources);
                 all_targets.extend(targets);
             }
@@ -81,9 +87,10 @@ fn try_interpret_stack<'a, O, A: Signature<O>>(
             Ok((all_sources, all_targets))
         }
         Hexpr::Operation(op) => {
-            let arr: A = op.try_into().map_err(|e| Error::Signature(op.clone(), e))?;
-            let s = arr.source();
-            let t = arr.target();
+            let arr: S::Arr = signature
+                .try_parse_op(op)
+                .map_err(|e| Error::Signature(op.clone(), e))?;
+            let (s, t) = signature.profile(&arr);
             let (_, interface) = state.new_operation(arr, s, t);
             Ok(interface)
         }

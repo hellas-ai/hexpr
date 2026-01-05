@@ -133,7 +133,7 @@ mod tests {
 
     #[test]
     fn test_comments_in_expressions() {
-        let result = HExprParser::parse_hexpr("(foo // this is a comment\n bar)").unwrap();
+        let result = HExprParser::parse_hexpr("(foo # this is a comment\n bar)").unwrap();
         assert_eq!(
             result,
             Hexpr::Composition(vec![

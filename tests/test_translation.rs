@@ -1,6 +1,7 @@
 use hexpr::*;
 use open_hypergraphs::lax::OpenHypergraph;
 
+/// Operations in polynomial circuits
 #[derive(Debug, Clone)]
 enum ArithOp {
     Add,
@@ -9,34 +10,29 @@ enum ArithOp {
 
 #[derive(Debug, thiserror::Error)]
 #[error("{0}")]
-struct Error(String);
+struct ParseError(String);
 
-impl TryFrom<&Operation> for ArithOp {
-    type Error = Error;
+// the signature of polynomial circuits
+struct PolyCirc;
 
-    fn try_from(op: &Operation) -> Result<Self, Self::Error> {
+impl Signature for PolyCirc {
+    type Arr = ArithOp;
+    type Obj = ();
+    type Error = ParseError;
+
+    fn try_parse_op(&self, op: &Operation) -> Result<Self::Arr, Self::Error> {
         match op.as_str() {
             "add" => Ok(ArithOp::Add),
             "neg" => Ok(ArithOp::Neg),
-            op => Err(Error(format!("invalid op: {}", op))),
-        }
-    }
-}
-
-impl Signature<()> for ArithOp {
-    fn source(&self) -> Vec<Option<()>> {
-        let ob = Some(());
-        match self {
-            Self::Add => vec![ob, ob],
-            Self::Neg => vec![ob],
+            op => Err(ParseError(format!("invalid op: {}", op))),
         }
     }
 
-    fn target(&self) -> Vec<Option<()>> {
+    fn profile(&self, op: &Self::Arr) -> (Vec<Option<Self::Obj>>, Vec<Option<Self::Obj>>) {
         let ob = Some(());
-        match self {
-            Self::Add => vec![ob],
-            Self::Neg => vec![ob],
+        match op {
+            ArithOp::Add => (vec![ob, ob], vec![ob]),
+            ArithOp::Neg => (vec![ob], vec![ob]),
         }
     }
 }
@@ -44,7 +40,8 @@ impl Signature<()> for ArithOp {
 #[test]
 fn test_simple_operation() -> anyhow::Result<()> {
     let hexpr = "add".parse()?;
-    let result: OpenHypergraph<Option<()>, ArithOp> = try_interpret(&hexpr)?;
+    let signature = PolyCirc;
+    let result: OpenHypergraph<Option<()>, ArithOp> = try_interpret(&signature, &hexpr)?;
     let result = unify(result)?;
 
     assert_eq!(result.sources.len(), 2);
@@ -58,7 +55,8 @@ fn test_simple_operation() -> anyhow::Result<()> {
 #[test]
 fn test_composition() -> anyhow::Result<()> {
     let hexpr = "(add neg)".parse()?;
-    let result: OpenHypergraph<Option<()>, ArithOp> = try_interpret(&hexpr)?;
+    let signature = PolyCirc;
+    let result: OpenHypergraph<Option<()>, ArithOp> = try_interpret(&signature, &hexpr)?;
     let result = unify(result)?;
 
     assert_eq!(result.sources.len(), 2);
@@ -72,7 +70,8 @@ fn test_composition() -> anyhow::Result<()> {
 #[test]
 fn test_frobenius() -> anyhow::Result<()> {
     let hexpr = "[x y . x]".parse()?;
-    let result: OpenHypergraph<Option<()>, ArithOp> = try_interpret(&hexpr)?;
+    let signature = PolyCirc;
+    let result: OpenHypergraph<Option<()>, ArithOp> = try_interpret(&signature, &hexpr)?;
 
     assert_eq!(result.sources.len(), 2);
     assert_eq!(result.targets.len(), 1);
@@ -88,7 +87,8 @@ fn test_frobenius() -> anyhow::Result<()> {
 #[test]
 fn test_all() -> anyhow::Result<()> {
     let hexpr = "({[x y . x] neg} add neg [y])".parse()?;
-    let result: OpenHypergraph<Option<()>, ArithOp> = try_interpret(&hexpr)?;
+    let signature = PolyCirc;
+    let result: OpenHypergraph<Option<()>, ArithOp> = try_interpret(&signature, &hexpr)?;
     let mut result = unify(result)?;
 
     // NOTE: this will panic if nodes cannot be quotiented!
