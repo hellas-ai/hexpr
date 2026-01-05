@@ -1,5 +1,5 @@
 WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
-COMMENT = _{ "//" ~ (!"\n" ~ ANY)* }
+COMMENT = _{ "#" ~ (!"\n" ~ ANY)* }
 
 hexprs = { SOI ~ hexpr* ~ EOI }
 one_hexpr = { SOI ~ hexpr ~ EOI }
@@ -19,6 +19,6 @@ frobenius = { "[" ~ vars ~ ( "." ~ vars)? ~ "]" }
 
 vars = { variable* }
 
-operation = @{ (ASCII_ALPHANUMERIC | "-" | "_" | "." | "*" | "+" | "/" | "|")+ }
+operation = @{ (ASCII_ALPHANUMERIC | "-" | "_" | "." | "*" | "+" | "/" | "|" | ">" | ">" | ":")+ }
 
 variable = @{ (ASCII_ALPHANUMERIC | "-" | "_") ~ (ASCII_ALPHANUMERIC | "-" | "_")* }
