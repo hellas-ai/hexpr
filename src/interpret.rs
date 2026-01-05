@@ -126,7 +126,7 @@ fn process_frobenius_variables<O, A>(
 impl<E: Display> Display for Error<E> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Composition(a, b) => write!(f, "failed to compose {:?} ; {:?}", a, b),
+            Error::Composition(a, b) => write!(f, "failed to compose {} ; {}", a, b),
             Error::Signature(op, err) => write!(f, "couldn't parse op {}: {}", op, err),
         }
     }

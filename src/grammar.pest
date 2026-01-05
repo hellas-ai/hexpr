@@ -19,6 +19,6 @@ frobenius = { "[" ~ vars ~ ( "." ~ vars)? ~ "]" }
 
 vars = { variable* }
 
-operation = @{ (ASCII_ALPHANUMERIC | "-" | "_" | "." | "*" | "+" | "/" | "|" | ">" | ">" | ":")+ }
+operation = @{ (ASCII_ALPHANUMERIC | "-" | "_" | "." | "*" | "+" | "/" | "|" | ">" | ">" | ":" | "=" | "!" | "?")+ }
 
 variable = @{ (ASCII_ALPHANUMERIC | "-" | "_") ~ (ASCII_ALPHANUMERIC | "-" | "_")* }
