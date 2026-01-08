@@ -65,7 +65,7 @@ impl std::fmt::Display for Operation {
 }
 
 impl std::str::FromStr for Hexpr {
-    type Err = pest::error::Error<crate::parser::Rule>;
+    type Err = crate::parser::ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         crate::parser::HExprParser::parse_hexpr(s)

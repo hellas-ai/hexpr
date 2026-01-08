@@ -1,9 +1,14 @@
 use crate::ast::{Hexpr, Operation, Variable};
-use pest::{error::Error, Parser};
+use pest::Parser;
 use pest_derive::Parser;
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub struct ParseError(#[from] pest::error::Error<Rule>);
 
 /// Parse multiple H-expressions from a string
-pub fn parse_hexprs(input: &str) -> Result<Vec<Hexpr>, Error<Rule>> {
+pub fn parse_hexprs(input: &str) -> Result<Vec<Hexpr>, ParseError> {
     HExprParser::parse_hexprs(input)
 }
 
@@ -12,14 +17,14 @@ pub fn parse_hexprs(input: &str) -> Result<Vec<Hexpr>, Error<Rule>> {
 pub struct HExprParser;
 
 impl HExprParser {
-    pub fn parse_hexpr(input: &str) -> Result<Hexpr, Error<Rule>> {
+    pub fn parse_hexpr(input: &str) -> Result<Hexpr, ParseError> {
         let pairs = HExprParser::parse(Rule::one_hexpr, input)?;
         let one_hexpr = pairs.into_iter().next().unwrap();
         let expr_pair = one_hexpr.into_inner().next().unwrap();
         Ok(parse_hexpr(expr_pair))
     }
 
-    pub fn parse_hexprs(input: &str) -> Result<Vec<Hexpr>, Error<Rule>> {
+    pub fn parse_hexprs(input: &str) -> Result<Vec<Hexpr>, ParseError> {
         let pairs = HExprParser::parse(Rule::hexprs, input)?;
         let hexprs = pairs.into_iter().next().unwrap();
         Ok(hexprs
