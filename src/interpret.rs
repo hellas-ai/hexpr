@@ -46,7 +46,7 @@ fn try_interpret_stack<S: Signature>(
 ) -> Result<Interface, Error<S::Error>> {
     match hexpr {
         Hexpr::Composition(hexprs) => {
-            let mut iter = hexprs.into_iter();
+            let mut iter = hexprs.iter();
             let mut hexpr = match iter.next() {
                 Some(hexpr) => hexpr,
                 None => return Ok((vec![], vec![])),
