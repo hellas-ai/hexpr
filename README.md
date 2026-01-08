@@ -46,37 +46,31 @@ This expression produces the following diagram:
 
 ![Imperative Example](propaganda/imperative_example.svg)
 
+<!--
 Each of these diagrams can be generated using `cargo run -- '<expr>' -qv > image.svg`--
 (see also `generate_readme_images.sh`).
+-->
 
 # Signatures
 
-How do hexprs know that `add` has two inputs and one output? Via a **signature**:
-the user must tell the hexpr library the *arity* and *type* of each operation.
-For example, `add : ℝ × ℝ → ℝ`.
+How do hexprs know that `add` has two inputs and one output? Via a **signature**.
+In order to interpret a hexpr as an open hypergraph, ont must specify a `Signature`.
+In Rust, this is the following trait:
 
-You can supply operation signature as JSON using the `--signature` or `-s` flag:
+```rust
+// hexpr::interpret::Signature
+pub trait Signature {
+    type Arr;
+    type Obj;
+    type Error;
 
-```bash
-cargo run -- '(add mul neg)' -qv --signature my_signature.json
-```
-
-The JSON format specifies inputs and outputs as arrays of type names:
-
-```json
-{
-  "add": {
-    "inputs": ["ℝ", "ℝ"],
-    "outputs": ["ℝ"]
-  },
-  "mul": {
-    "inputs": ["ℝ", "ℝ"],
-    "outputs": ["ℝ"]
-  }
+    fn try_parse_op(&self, op: &Operation) -> Result<Self::Arr, Self::Error>;
+    fn profile(&self, op: &Self::Arr) -> (Vec<Option<Self::Obj>>, Vec<Option<Self::Obj>>);
 }
 ```
 
-If no signature file is explicitly provided via `--signature`, an empty signature will be used. With an empty signature, no operations are available - only Frobenius structures (variable binding) can be used. Operations must be explicitly defined in a signature file.
+The `try_parse_op` method parses a hexpr operation to an internal representation,
+then `profile` gets the type: the source and target of the operation.
 
 # Category Theory
 
@@ -89,7 +83,7 @@ These diagrams have an *algebraic* description in terms of compositions `(f g)`
 and tensor products `{f g}`: we'll explore that in detail here.
 
 A *signature* `(Σ₀, Σ₁)` is pair of sets: objects `Σ₀` label wires, and `Σ₁` label boxes (operations).
-One intuition is "types" and "primitive functions", but diagrams need not always represent functions.
+One intuition is "types" and "primitive functions", but diagrams need not in general represent functions.
 
 Each operation `f ∈ Σ₁` has a *type*: a list of source objects `X₀...Xm` and a list of target objects `Y₀..Yn`.
 We write this as `f : X₀...Xm → Y₀...Yn`.
