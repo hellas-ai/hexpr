@@ -49,8 +49,10 @@ pub fn unify<O: Clone + PartialEq, A: Clone>(
 impl std::fmt::Display for UnifyError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            UnifyError::Unknown => write!(f, "not all labels known"),
-            UnifyError::Mismatch(node_id) => write!(f, "conflicting labels for {node_id:?}"),
+            UnifyError::Unknown => write!(f, "UnifyError: not all labels known"),
+            UnifyError::Mismatch(node_id) => {
+                write!(f, "UnifyError: conflicting labels for {node_id:?}")
+            }
         }
     }
 }
