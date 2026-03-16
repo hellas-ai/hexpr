@@ -1,10 +1,10 @@
 //! Convert Hexprs to open hypergraphs via a "partial signature".
 use std::collections::HashMap;
-use std::fmt::Display;
 
 use open_hypergraphs::lax::{Interface, NodeId, OpenHypergraph};
 
 use crate::ast::{Hexpr, Operation, Variable};
+use thiserror::Error;
 
 /// A `Signature` is:
 ///  - A way to parse operations
@@ -18,11 +18,11 @@ pub trait Signature {
     fn profile(&self, op: &Self::Arr) -> (Vec<Option<Self::Obj>>, Vec<Option<Self::Obj>>);
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum Error<E> {
-    /// Composition of two hexprs had incorrect arity according to the signature
+    #[error("Failed to compose {0} ; {1}")]
     Composition(Hexpr, Hexpr),
-    /// An operation name was unknown
+    #[error("Couldn't parse op {0}: {1}")]
     Signature(Operation, E),
 }
 
@@ -121,22 +121,4 @@ fn process_frobenius_variables<O, A>(
             }
         })
         .collect()
-}
-
-impl<E: Display> Display for Error<E> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::Composition(a, b) => write!(f, "failed to compose {} ; {}", a, b),
-            Error::Signature(op, err) => write!(f, "couldn't parse op {}: {}", op, err),
-        }
-    }
-}
-
-impl<E: std::error::Error + 'static> std::error::Error for Error<E> {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Error::Signature(_, e) => Some(e),
-            _ => None,
-        }
-    }
 }

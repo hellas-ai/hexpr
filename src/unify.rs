@@ -1,10 +1,16 @@
+use thiserror::Error;
+
 use open_hypergraphs::category::Arrow;
 use open_hypergraphs::lax::{NodeId, OpenHypergraph};
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum UnifyError {
-    Unknown,
+    #[error("Not all node labels known")]
+    NotAllLabelsKnown,
+    #[error("Could not unify {0:?}")]
     Mismatch(NodeId),
+    #[error("Quotient failed")]
+    Quotient,
 }
 
 /// Unify the variables of an unquotiented open hypergraph with nodes labels `Option<O>`.
@@ -37,28 +43,13 @@ pub fn unify<O: Clone + PartialEq, A: Clone>(
     let class_labels: Vec<O> = class_labels
         .into_iter()
         .collect::<Option<_>>()
-        .ok_or(UnifyError::Unknown)?;
+        .ok_or(UnifyError::NotAllLabelsKnown)?;
     let nodes = (0..f.hypergraph.nodes.len())
         .map(|i| class_labels[coequalizer.table[i]].clone())
         .collect();
-    let mut f = f.with_nodes(|_| nodes).ok_or(UnifyError::Unknown)?;
-    f.quotient();
+    let mut f = f
+        .with_nodes(|_| nodes)
+        .ok_or(UnifyError::NotAllLabelsKnown)?;
+    f.quotient().map_err(|_| UnifyError::Quotient)?;
     Ok(f)
-}
-
-impl std::fmt::Display for UnifyError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            UnifyError::Unknown => write!(f, "UnifyError: not all labels known"),
-            UnifyError::Mismatch(node_id) => {
-                write!(f, "UnifyError: conflicting labels for {node_id:?}")
-            }
-        }
-    }
-}
-
-impl std::error::Error for UnifyError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        None
-    }
 }
