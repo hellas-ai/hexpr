@@ -91,8 +91,9 @@ fn test_all() -> anyhow::Result<()> {
     let result: OpenHypergraph<Option<()>, ArithOp> = try_interpret(&signature, &hexpr)?;
     let mut result = unify(result)?;
 
-    // NOTE: this will panic if nodes cannot be quotiented!
-    result.quotient();
+    result
+        .quotient()
+        .expect("quotient should succeed after unification");
 
     assert_eq!(result.sources.len(), 3);
     assert_eq!(result.targets.len(), 1);
