@@ -9,7 +9,7 @@ use thiserror::Error;
 #[derive(Debug)]
 pub struct OpenHypergraphWithNames<O, A> {
     pub graph: OpenHypergraph<O, A>,
-    pub names: HashMap<Variable, NodeId>,
+    pub names: HashMap<NodeId, Vec<Variable>>,
 }
 
 /// A `Signature` is:
@@ -50,8 +50,16 @@ pub fn try_interpret_with_names<S: Signature>(
     state.targets = targets;
     Ok(OpenHypergraphWithNames {
         graph: state,
-        names: env,
+        names: names_by_node(env),
     })
+}
+
+fn names_by_node(env: HashMap<Variable, NodeId>) -> HashMap<NodeId, Vec<Variable>> {
+    env.into_iter()
+        .fold(HashMap::new(), |mut names, (variable, node)| {
+            names.entry(node).or_default().push(variable);
+            names
+        })
 }
 
 fn try_interpret_stack<S: Signature>(

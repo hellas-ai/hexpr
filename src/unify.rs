@@ -1,7 +1,12 @@
 use thiserror::Error;
 
+use std::collections::HashMap;
+
 use open_hypergraphs::category::Arrow;
 use open_hypergraphs::lax::{NodeId, OpenHypergraph};
+
+use crate::interpret::OpenHypergraphWithNames;
+use crate::Variable;
 
 #[derive(Debug, Error)]
 pub enum UnifyError {
@@ -52,4 +57,24 @@ pub fn unify<O: Clone + PartialEq, A: Clone>(
         .ok_or(UnifyError::NotAllLabelsKnown)?;
     f.quotient().map_err(|_| UnifyError::Quotient)?;
     Ok(f)
+}
+
+impl<O: Clone + PartialEq, A: Clone> OpenHypergraphWithNames<Option<O>, A> {
+    /// Unify and quotient the open hypergraph, carrying names to quotient nodes.
+    pub fn unify(self) -> Result<OpenHypergraphWithNames<O, A>, UnifyError> {
+        let coequalizer = self.graph.hypergraph.coequalizer();
+        let names: HashMap<NodeId, Vec<Variable>> =
+            self.names
+                .into_iter()
+                .fold(Default::default(), |mut names, (node, variables)| {
+                    names
+                        .entry(NodeId(coequalizer.table[node.0]))
+                        .or_default()
+                        .extend(variables);
+                    names
+                });
+
+        let graph = unify(self.graph)?;
+        Ok(OpenHypergraphWithNames { graph, names })
+    }
 }
