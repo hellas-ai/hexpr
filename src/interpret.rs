@@ -6,6 +6,12 @@ use open_hypergraphs::lax::{Interface, NodeId, OpenHypergraph};
 use crate::ast::{Hexpr, Operation, Variable};
 use thiserror::Error;
 
+#[derive(Debug)]
+pub struct OpenHypergraphWithNames<O, A> {
+    pub graph: OpenHypergraph<O, A>,
+    pub names: HashMap<Variable, NodeId>,
+}
+
 /// A `Signature` is:
 ///  - A way to parse operations
 ///   - A profile: a source/target type for each arrow
@@ -30,12 +36,22 @@ pub fn try_interpret<S: Signature>(
     signature: &S,
     hexpr: &Hexpr,
 ) -> Result<OpenHypergraph<Option<S::Obj>, S::Arr>, Error<S::Error>> {
+    Ok(try_interpret_with_names(signature, hexpr)?.graph)
+}
+
+pub fn try_interpret_with_names<S: Signature>(
+    signature: &S,
+    hexpr: &Hexpr,
+) -> Result<OpenHypergraphWithNames<Option<S::Obj>, S::Arr>, Error<S::Error>> {
     let mut state = OpenHypergraph::empty();
     let mut env = HashMap::new();
     let (sources, targets) = try_interpret_stack(signature, &mut state, &mut env, hexpr)?;
     state.sources = sources;
     state.targets = targets;
-    Ok(state)
+    Ok(OpenHypergraphWithNames {
+        graph: state,
+        names: env,
+    })
 }
 
 fn try_interpret_stack<S: Signature>(
