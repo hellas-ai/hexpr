@@ -39,7 +39,7 @@ This allows you to construct hypergraphs in "imperative style" using square brac
 
     ([a b.] {                    // [a b] are like "function arguments"
         ([.a b] add [acc.])      // acc = a + b
-        ([.a acc] mul [result.]  // result = a * acc
+        ([.a acc] mul [result.]) // result = a * acc
     } [.result])                 // [.result] says there is one output wire - result.
 
 This expression produces the following diagram:
