@@ -85,6 +85,47 @@ fn test_frobenius() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_interpret_with_names() -> anyhow::Result<()> {
+    let hexpr = "[x y . x]".parse()?;
+    let signature = PolyCirc;
+    let result = try_interpret_with_names(&signature, &hexpr)?;
+
+    assert_eq!(result.graph.sources.len(), 2);
+    assert_eq!(result.graph.targets.len(), 1);
+    assert_eq!(result.names.len(), 2);
+    assert_eq!(
+        result.names.get(&result.graph.sources[0]),
+        Some(&vec!["x".parse()?])
+    );
+    assert_eq!(
+        result.names.get(&result.graph.sources[1]),
+        Some(&vec!["y".parse()?])
+    );
+    assert_eq!(result.graph.targets[0], result.graph.sources[0]);
+
+    Ok(())
+}
+
+#[test]
+fn test_unify_with_names() -> anyhow::Result<()> {
+    let hexpr = "([.x] [y] neg)".parse()?;
+    let signature = PolyCirc;
+    let result = try_interpret_with_names(&signature, &hexpr)?;
+    let result = result.unify()?;
+
+    assert_eq!(result.graph.sources.len(), 0);
+    assert_eq!(result.graph.targets.len(), 1);
+    assert_eq!(result.names.len(), 1);
+
+    let variables = result.names.values().next().unwrap();
+    assert_eq!(variables.len(), 2);
+    assert!(variables.contains(&"x".parse()?));
+    assert!(variables.contains(&"y".parse()?));
+
+    Ok(())
+}
+
+#[test]
 fn test_all() -> anyhow::Result<()> {
     let hexpr = "({[x y . x] neg} add neg [y])".parse()?;
     let signature = PolyCirc;
