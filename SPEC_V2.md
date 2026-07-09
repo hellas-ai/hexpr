@@ -137,9 +137,62 @@ external signature is required — the term is its own presentation.
 
 # Macros, Quoting, and Binding Names
 
-TODO
+The quote token `!` marks its argument for *preprocessing*: a quoted hexpr
+is not interpreted directly, but passed as syntax to a *macro*, whose result
+is used in its place. A quote *mentions* its payload rather than using it:
+names inside a quote never unify with names outside.
 
-# Tuples
+Macros are dispatched on the *head* of the payload:
+
+    !(bind e1 … en)      head `bind`, args e1 … en
+    !{bind e1 … en}      same macro; expansion preserves the bracket type
+    !todo                an atom is its own head (nullary)
+
+A macro may return either:
+
+1. a hexpr, which is interpreted in the quote's place (in its own scope), or
+2. an open hypergraph, spliced in directly.
+
+The library invokes a user-supplied *macro hook* for each quote, so hosts
+define their own macros. Two are provided:
+
+- `!(bind e…)` — behaves as `(e…)`, except equal names in *different* spider
+  brackets denote the same node. (Recall the default: names are local to
+  their bracket, and cross-bracket wiring is positional.)
+- `!(unbind e…)` — asserts no sharing: names inside stay bracket-local even
+  under an enclosing `bind`.
+
+For example, the twist, wired by name:
+
+    !(bind [x y .] [. y x])
+
+**Expansion is outside-in.** A macro treats nested quotes as opaque leaves;
+they expand afterwards, in their own sealed scopes. So a nested `bind` or
+`unbind` opens a fresh region that forgets outer bindings — and any v1 hexpr
+ports to v2 by wrapping it in one top-level `!(bind …)`, which restores
+v1's global binding exactly.
+
+# Case studies
+
+What's enabled by this new spec that wasn't possible or easy previously?
+
+## Multiple sorts in Metacat
+
+- Metacat currently uses `wff` and `|-` as *constructors* - actual logical symbols
+- Instead, we can now use them as *sorts*!
+- We defined `fol.sorts` as having constants `wff`, `|-`, `setvar`.
+- Then `fol.syntax` is defined *over* `fol.sorts`...
+- and axioms like `wi` become `wi : {^wff ^wff} -> ^wff` - so there are no
+  constructors to unpack, only sorts to match.
+
+THOUGHT: this doesn't fail at check time! It fails at "construction time"!
+Or does it fail at `syntax check` time?
+
+No: fails when constructing the hexpr for `wi` - we cannot unify the sorts, so
+we just immediately crash. This is not terrible, but it's a different kind of
+checking for sure.
+
+## Variadic Operations (Tuples)
 
 With the changes in V2, can we define (variable arity/coarity) tuples?
 Let's say we assume a builtin 'tuple' label.
