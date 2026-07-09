@@ -1,0 +1,106 @@
+<svg height="96" viewBox="0 0 7 6" width="112" xmlns="http://www.w3.org/2000/svg">
+<style>
+svg { color-scheme: light dark; } .spider { color: #111; } .drawable { color: #111; } .spider text, .drawable text { fill: currentColor !important; } .spider path, .spider line, .spider rect, .spider circle, .spider ellipse, .spider polyline, .spider polygon, .drawable path, .drawable line, .drawable rect, .drawable circle, .drawable ellipse, .drawable polyline, .drawable polygon { stroke: currentColor !important; } @media (prefers-color-scheme: dark) { .spider, .drawable { color: #f5f5f5; } }
+</style>
+<g>
+<g transform="translate(0, 0)">
+<g transform="translate(0, 0)">
+<g transform="translate(0, 0)">
+<g transform="translate(0, 0)">
+<g transform="translate(0, 0)">
+<g transform="translate(0, 0)"/>
+<g transform="translate(0, 5)"/>
+</g>
+<g transform="translate(0, 6)"/>
+</g>
+<g transform="translate(0, 0)">
+<g transform="translate(0, 0)">
+<g transform="translate(0, 0)">
+<g transform="translate(0, 0)"/>
+<g transform="translate(0, 2)">
+<g transform="translate(0, 0)">
+<g>
+<path d="M 0 1 L 2 1" fill="transparent" stroke="black" stroke-width="0.05"/>
+<rect fill="red" height="0.8" stroke="none" width="0.8" x="0.6" y="0.6"/>
+</g>
+</g>
+<g transform="translate(0, 2)">
+<g transform="translate(0, 0)">
+<g transform="translate(0, 0)">
+<g class="spider">
+<path d="M 0 0 L 0.4 0" fill="transparent" stroke="black" stroke-width="0.05"/>
+<path d="M 0.6 0 L 1 0" fill="transparent" stroke="black" stroke-width="0.05"/>
+<path d="M 0.4 0 C 0.5 0 0.5 0 0.6 0" fill="transparent" stroke="black" stroke-width="0.05"/>
+</g>
+</g>
+<g transform="translate(1, 0)">
+<g class="spider">
+<path d="M 0 0 L 0.4 0" fill="transparent" stroke="black" stroke-width="0.05"/>
+<path d="M 0.6 0 L 1 0" fill="transparent" stroke="black" stroke-width="0.05"/>
+<path d="M 0.4 0 C 0.5 0 0.5 0 0.6 0" fill="transparent" stroke="black" stroke-width="0.05"/>
+</g>
+</g>
+</g>
+<g transform="translate(2, 0)"/>
+</g>
+</g>
+</g>
+<g transform="translate(0, 5)"/>
+</g>
+<g transform="translate(0, 6)"/>
+</g>
+</g>
+<g transform="translate(2, 0)">
+<g transform="translate(0, 0)">
+<g transform="translate(0, 0)">
+<g class="spider">
+<path d="M 0 3 L 0.4 3" fill="transparent" stroke="black" stroke-width="0.05"/>
+<path d="M 0 4 L 0.4 4" fill="transparent" stroke="black" stroke-width="0.05"/>
+<path d="M 2.6 1 L 3 1" fill="transparent" stroke="black" stroke-width="0.05"/>
+<path d="M 2.6 5 L 3 5" fill="transparent" stroke="black" stroke-width="0.05"/>
+<path d="M 0.4 3 C 1.5 3 1.5 1 2.6 1" fill="transparent" stroke="black" stroke-width="0.05"/>
+<path d="M 0.4 4 C 1.5 4 1.5 5 2.6 5" fill="transparent" stroke="black" stroke-width="0.05"/>
+</g>
+</g>
+<g transform="translate(0, 6)"/>
+</g>
+<g transform="translate(0, 6)"/>
+</g>
+</g>
+<g transform="translate(5, 0)">
+<g transform="translate(0, 0)">
+<g transform="translate(0, 0)">
+<g transform="translate(0, 0)"/>
+<g transform="translate(0, 0)">
+<g>
+<path d="M 0 1 C 0.5 1 0.75 3 1.0 3" fill="transparent" stroke="black" stroke-width="0.05"/>
+<path d="M 0 5 C 0.5 5 0.75 3 1.0 3" fill="transparent" stroke="black" stroke-width="0.05"/>
+<path d="M 1.18 3 L 2 3" fill="transparent" stroke="black" stroke-width="0.05"/>
+<circle cx="1" cy="3" fill="white" r="0.36" stroke="black" stroke-width="0.05"/>
+</g>
+</g>
+</g>
+<g transform="translate(0, 6)"/>
+</g>
+<g transform="translate(0, 6)"/>
+</g>
+</g>
+<g transform="translate(7, 0)">
+<g transform="translate(0, 0)">
+<g transform="translate(0, 0)"/>
+<g transform="translate(0, 4)"/>
+</g>
+<g transform="translate(0, 6)"/>
+</g>
+</g>
+<style>
+
+@media (prefers-color-scheme: dark) {
+  [fill="black"] { fill: white !important; }
+  [fill="white"] { fill: black !important; }
+  [stroke="black"] { stroke: white !important; }
+  [stroke="white"] { stroke: black !important; }
+}
+
+</style>
+</svg>
