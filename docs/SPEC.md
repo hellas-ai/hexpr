@@ -107,33 +107,51 @@ There are two resolutions:
 
 Both modes are possible in the library.
 
-# Fully Annotated Terms
+# Profile-Annotated and Fully Annotated Terms
 
-A term is *fully annotated* if it contains no quotes `!` and its source and
-target types are computable by the structural recursion below, using no
-signature and no unification. Write `src(e)` and `tgt(e)` for the computed
-lists of object labels.
+Two degrees of annotation for macro-expanded terms matter:
 
-- `^t` is fully annotated, with `src = tgt = (t)`.
-- `_` is not (its label is `Unknown` by definition).
-- A bare atom by itself is not (its type is nowhere written).
-- `[xs . ys]` is fully annotated iff every node carries a label on at least
-  one of its occurrences in the bracket, and repeated labels agree
-  syntactically. `src`/`tgt` list the node labels in occurrence order.
-- `{e1 … en}` is fully annotated iff every `ei` is; boundaries concatenate.
-  (`{}` is fully annotated, with empty boundary.)
-- `(e1 … en)`: call an element that is a bare atom an *operation use*. Every
-  other element must be fully annotated, and no operation use may be
-  adjacent to another one, first, or last. An operation use takes its type
-  from its neighbors: `src = tgt` of the preceding element, `tgt = src` of
-  the following. All adjacent boundaries must agree syntactically:
-  `tgt(ei) = src(e(i+1))`. Then `src = src(e1)`, `tgt = tgt(en)`.
-  (`()` alone is not fully annotated: its boundary is undetermined.)
+1. Enough to determine *arity* and *coarity*
+2. Enough to determine *types*
 
-Every *fully annotated* term is interpretable in `C`, rather than `U(C)`:
-the resulting open hypergraph has no `Unknown` labels, and each operation
-use determines an element of `Σ₁` together with an explicit type. No
-external signature is required — the term is its own presentation.
+Both are checked by structural recursion computing boundaries as
+lists over `Σ₀ + {Unknown}`; the latter is guaranteed to result in no `Unknown`
+labels.
+
+The recursion:
+
+- `_`: `src = tgt = (Unknown)`.
+- `^t`: `src = tgt = (t)`.
+- A bare atom by itself *fails* (even its arity is nowhere written).
+- `[xs . ys]`: always succeeds. A node's label is the one attached to any
+  of its occurrences in the bracket (repeated labels must agree
+  syntactically); unlabeled nodes get `Unknown`. `src`/`tgt` list node
+  labels in occurrence order.
+- `{e1 … en}`: succeeds iff every `ei` does; boundaries concatenate.
+  (`{}` succeeds, with empty boundary.)
+- `(e1 … en)`: call an element that is a bare atom an *operation use*.
+  Every other element must succeed, and no operation use may be adjacent
+  to another one, first, or last. An operation use takes its profile from
+  its neighbors: `src = tgt` of the preceding element, `tgt = src` of the
+  following. Adjacent boundaries must have equal width, with labels
+  agreeing position-wise where both are known (`Unknown` agrees with
+  anything). Then `src = src(e1)`, `tgt = tgt(en)`.
+  (`()` alone fails: even its width is undetermined.)
+
+A term is **profile-annotated** if the recursion succeeds: every operation
+use has a determined arity and coarity. Profile-annotated terms are
+interpretable in `U(C)` with no external signature.
+
+A term is **fully annotated** if it is profile-annotated and no `Unknown`
+appears in the boundary of any subterm — equivalently: no `_`, and every
+spider node labeled. Fully annotated terms are interpretable in `C`: the
+resulting open hypergraph has no `Unknown` labels, and each operation use
+determines an element of `Σ₁` together with an explicit type. No external
+signature is required — the term is its own presentation.
+
+From the Interpretation section's examples: `({^u64 ^u64} u64.add ^u64)` is
+fully annotated, `({_ _} u64.add _)` is profile-annotated only, and
+`({_ _} f g _)` is neither.
 
 # Macros, Quoting, and Binding Names
 
