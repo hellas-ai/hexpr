@@ -160,17 +160,25 @@ define their own macros. Two are provided:
   brackets denote the same node. (Recall the default: names are local to
   their bracket, and cross-bracket wiring is positional.)
 - `!(unbind e…)` — asserts no sharing: names inside stay bracket-local even
-  under an enclosing `bind`.
+  under an enclosing `bind`. Its expander is the identity — the protection
+  comes from quotation itself, since any quote is opaque to an enclosing
+  `bind`. `unbind` is the "seal and nothing else" quote.
 
 For example, the twist, wired by name:
 
     !(bind [x y .] [. y x])
 
-**Expansion is outside-in.** A macro treats nested quotes as opaque leaves;
-they expand afterwards, in their own sealed scopes. So a nested `bind` or
-`unbind` opens a fresh region that forgets outer bindings — and any v1 hexpr
-ports to v2 by wrapping it in one top-level `!(bind …)`, which restores
-v1's global binding exactly.
+**Macro expansion is outside-in**, as in Lisp: the outermost macro runs
+first, and decides for itself whether nested quotes are code or data.
+
+- A macro receives nested quotes *unexpanded*, as opaque leaves; in
+  particular, `bind` cannot capture names inside them.
+- If a macro returns a hexpr, quotes in the result then expand the same
+  way, each in its own sealed scope.
+- Consequently a nested `bind` or `unbind` opens a fresh region that
+  forgets outer bindings.
+- Porting v1: wrap a whole v1 hexpr in one top-level `!(bind …)` to restore
+  v1's global binding exactly.
 
 # Case studies
 
@@ -185,12 +193,10 @@ What's enabled by this new spec that wasn't possible or easy previously?
 - and axioms like `wi` become `wi : {^wff ^wff} -> ^wff` - so there are no
   constructors to unpack, only sorts to match.
 
-THOUGHT: this doesn't fail at check time! It fails at "construction time"!
-Or does it fail at `syntax check` time?
-
-No: fails when constructing the hexpr for `wi` - we cannot unify the sorts, so
-we just immediately crash. This is not terrible, but it's a different kind of
-checking for sure.
+Note that if we do "metacat with sorts" as described above, then some
+compositions actually fail at *term construction time*.
+Suppose we compose `wi : {wff wff} -> wff` with `foo : |- -> |-` - this can't
+compose now, since sorts `wff` and `|-` are unequal!
 
 ## Variadic Operations (Tuples)
 
