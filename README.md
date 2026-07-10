@@ -51,13 +51,18 @@ Each of these diagrams can be generated using `cargo run -- '<expr>' -qv > image
 (see also `generate_readme_images.sh`).
 -->
 
-**Object types** can be annotated using the `^` operation.
+**Object labels** can be annotated with `^`.
 
-- `^A` is the (unnamed) identity wire labeled `A`, with `A` any hexpr
-- `_` is the unlabeled identity wire
+- `^A` is a fresh unnamed identity wire labeled by object `A`
+- `_` is a fresh unnamed identity wire with no known object label
 
-One can also annotate types within spider brackets, so `[x^A]` is the same as
-`^A`, assuming `x` is not bound.
+The object annotation payload `A` is parsed by `Signature::try_parse_object`;
+syntactically it may be any hexpr, though a particular signature may only accept
+atoms such as `A`, `u64`, or `wff`.
+
+Spider variables can also be annotated. For a fresh name, `[x^A]` is equivalent
+to `^A`. If `x` is already bound, `[x^A]` reuses that wire and adds or checks the
+object annotation.
 
 # Signatures
 
