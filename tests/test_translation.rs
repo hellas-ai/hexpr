@@ -28,12 +28,39 @@ impl Signature for PolyCirc {
         }
     }
 
+    fn try_parse_object(&self, _object: &Hexpr) -> Result<Self::Obj, Self::Error> {
+        Ok(())
+    }
+
     fn profile(&self, op: &Self::Arr) -> (Vec<Option<Self::Obj>>, Vec<Option<Self::Obj>>) {
         let ob = Some(());
         match op {
             ArithOp::Add => (vec![ob, ob], vec![ob]),
             ArithOp::Neg => (vec![ob], vec![ob]),
         }
+    }
+}
+
+struct LabelSig;
+
+impl Signature for LabelSig {
+    type Arr = ();
+    type Obj = String;
+    type Error = ParseError;
+
+    fn try_parse_op(&self, op: &Operation) -> Result<Self::Arr, Self::Error> {
+        Err(ParseError(format!("invalid op: {}", op)))
+    }
+
+    fn try_parse_object(&self, object: &Hexpr) -> Result<Self::Obj, Self::Error> {
+        match object {
+            Hexpr::Operation(op) => Ok(op.as_str().to_string()),
+            object => Err(ParseError(format!("invalid object: {}", object))),
+        }
+    }
+
+    fn profile(&self, _op: &Self::Arr) -> (Vec<Option<Self::Obj>>, Vec<Option<Self::Obj>>) {
+        unreachable!("LabelSig has no operations")
     }
 }
 
@@ -140,6 +167,86 @@ fn test_all() -> anyhow::Result<()> {
     assert_eq!(result.targets.len(), 1);
     assert_eq!(result.hypergraph.edges.len(), 3);
     assert_eq!(result.hypergraph.nodes.len(), 5);
+
+    Ok(())
+}
+
+#[test]
+fn test_hole_interprets_as_unknown_identity() -> anyhow::Result<()> {
+    let hexpr = "_".parse()?;
+    let signature = LabelSig;
+    let result = try_interpret(&signature, &hexpr)?;
+
+    assert_eq!(result.sources.len(), 1);
+    assert_eq!(result.targets.len(), 1);
+    assert_eq!(result.sources[0], result.targets[0]);
+    assert_eq!(result.hypergraph.nodes[result.sources[0].0], None);
+    assert!(unify(result).is_err());
+
+    Ok(())
+}
+
+#[test]
+fn test_labeled_wire_interprets_as_typed_identity() -> anyhow::Result<()> {
+    let hexpr = "^num".parse()?;
+    let signature = LabelSig;
+    let result = try_interpret(&signature, &hexpr)?;
+
+    assert_eq!(result.sources.len(), 1);
+    assert_eq!(result.targets.len(), 1);
+    assert_eq!(result.sources[0], result.targets[0]);
+    assert_eq!(
+        result.hypergraph.nodes[result.sources[0].0],
+        Some("num".to_string())
+    );
+
+    let result = unify(result)?;
+    assert_eq!(result.hypergraph.nodes[result.sources[0].0], "num");
+
+    Ok(())
+}
+
+#[test]
+fn test_labeled_spider_keeps_global_binding() -> anyhow::Result<()> {
+    let hexpr = "([x^num .] [. x])".parse()?;
+    let signature = LabelSig;
+    let result = try_interpret_with_names(&signature, &hexpr)?;
+
+    assert_eq!(result.graph.sources.len(), 1);
+    assert_eq!(result.graph.targets.len(), 1);
+    assert_eq!(result.graph.sources[0], result.graph.targets[0]);
+    assert_eq!(
+        result.graph.hypergraph.nodes[result.graph.sources[0].0],
+        Some("num".to_string())
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_conflicting_object_annotations_fail_at_unify() -> anyhow::Result<()> {
+    let hexpr = "[x^num . x^bool]".parse()?;
+    let signature = LabelSig;
+    let result = try_interpret(&signature, &hexpr)?;
+
+    assert!(unify(result).is_err());
+
+    Ok(())
+}
+
+#[test]
+fn test_empty_forms_interpret_as_empty_diagram() -> anyhow::Result<()> {
+    let signature = LabelSig;
+
+    for input in ["()", "[]", "{}"] {
+        let hexpr = input.parse()?;
+        let result = try_interpret(&signature, &hexpr)?;
+
+        assert_eq!(result.sources.len(), 0, "sources for {input}");
+        assert_eq!(result.targets.len(), 0, "targets for {input}");
+        assert_eq!(result.hypergraph.nodes.len(), 0, "nodes for {input}");
+        assert_eq!(result.hypergraph.edges.len(), 0, "edges for {input}");
+    }
 
     Ok(())
 }

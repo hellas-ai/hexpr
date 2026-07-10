@@ -8,16 +8,24 @@ hexpr = {
     composition
   | tensor
   | frobenius
+  | wire
+  | hole
   | operation
 }
 
-composition = { "(" ~ hexpr+ ~ ")" }
+composition = { "(" ~ hexpr* ~ ")" }
 
-tensor = { "{" ~ hexpr+ ~ "}" }
+tensor = { "{" ~ hexpr* ~ "}" }
 
 frobenius = { "[" ~ vars ~ ( "." ~ vars)? ~ "]" }
 
-vars = { variable* }
+vars = { lvar* }
+
+lvar = { variable ~ ( "^" ~ hexpr )? }
+
+wire = { "^" ~ hexpr }
+
+hole = { "_" }
 
 operation = @{ (ASCII_ALPHANUMERIC | "-" | "_" | "." | "*" | "+" | "/" | "|" | ">" | ">" | ":" | "=" | "!" | "?")+ }
 

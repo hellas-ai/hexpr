@@ -1,5 +1,8 @@
 # Hexpr V2 Spec
 
+This is the proposed specification for **version 2** of the hexpr syntax.
+This is NOT the current released specification.
+
 A `hexpr` (or H-expression) is a syntax for defining arrows of symmetric monoidal categories.
 In short:
 
