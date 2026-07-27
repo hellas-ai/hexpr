@@ -51,10 +51,23 @@ Each of these diagrams can be generated using `cargo run -- '<expr>' -qv > image
 (see also `generate_readme_images.sh`).
 -->
 
+**Object labels** can be annotated with `^`.
+
+- `^A` is a fresh unnamed identity wire labeled by object `A`
+- `_` is a fresh unnamed identity wire with no known object label
+
+The object annotation payload `A` is parsed by `Signature::try_parse_object`;
+syntactically it may be any hexpr, though a particular signature may only accept
+atoms such as `A`, `u64`, or `wff`.
+
+Spider variables can also be annotated. For a fresh name, `[x^A]` is equivalent
+to `^A`. If `x` is already bound, `[x^A]` reuses that wire and adds or checks the
+object annotation.
+
 # Signatures
 
 How do hexprs know that `add` has two inputs and one output? Via a **signature**.
-In order to interpret a hexpr as an open hypergraph, ont must specify a `Signature`.
+In order to interpret a hexpr as an open hypergraph, one must specify a `Signature`.
 In Rust, this is the following trait:
 
 ```rust
@@ -65,12 +78,15 @@ pub trait Signature {
     type Error;
 
     fn try_parse_op(&self, op: &Operation) -> Result<Self::Arr, Self::Error>;
+    fn try_parse_object(&self, object: &Hexpr) -> Result<Self::Obj, Self::Error>;
     fn profile(&self, op: &Self::Arr) -> (Vec<Option<Self::Obj>>, Vec<Option<Self::Obj>>);
 }
 ```
 
 The `try_parse_op` method parses a hexpr operation to an internal representation,
 then `profile` gets the type: the source and target of the operation.
+The `try_parse_object` method parses object annotations such as the `A` in `^A`
+or `[x^A]`.
 
 # Category Theory
 

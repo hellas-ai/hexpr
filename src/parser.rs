@@ -1,4 +1,4 @@
-use crate::ast::{Hexpr, Operation, Variable};
+use crate::ast::{Hexpr, LVar, Operation, Variable};
 use pest::Parser;
 use pest_derive::Parser;
 use thiserror::Error;
@@ -33,6 +33,12 @@ impl HExprParser {
             .map(parse_hexpr)
             .collect())
     }
+
+    pub fn parse_lvar(input: &str) -> Result<LVar, ParseError> {
+        let pairs = HExprParser::parse(Rule::lvar, input)?;
+        let lvar = pairs.into_iter().next().unwrap();
+        Ok(parse_lvar(lvar))
+    }
 }
 
 fn parse_hexpr(pair: pest::iterators::Pair<Rule>) -> Hexpr {
@@ -41,9 +47,16 @@ fn parse_hexpr(pair: pest::iterators::Pair<Rule>) -> Hexpr {
         Rule::composition => Hexpr::Composition(pair.into_inner().map(parse_hexpr).collect()),
         Rule::tensor => Hexpr::Tensor(pair.into_inner().map(parse_hexpr).collect()),
         Rule::frobenius => parse_frobenius(pair),
+        Rule::wire => parse_wire(pair),
+        Rule::hole => Hexpr::Hole,
         Rule::operation => Hexpr::Operation(Operation(pair.as_str().to_string())),
         x => panic!("unreachable: {:?}", x),
     }
+}
+
+fn parse_wire(pair: pest::iterators::Pair<Rule>) -> Hexpr {
+    let label = pair.into_inner().next().unwrap();
+    Hexpr::Wire(Box::new(parse_hexpr(label)))
 }
 
 fn parse_frobenius(pair: pest::iterators::Pair<Rule>) -> Hexpr {
@@ -53,9 +66,16 @@ fn parse_frobenius(pair: pest::iterators::Pair<Rule>) -> Hexpr {
     Hexpr::Frobenius { sources, targets }
 }
 
-fn parse_vars(pair: pest::iterators::Pair<Rule>) -> Vec<Variable> {
+fn parse_vars(pair: pest::iterators::Pair<Rule>) -> Vec<LVar> {
     debug_assert_eq!(pair.as_rule(), Rule::vars);
-    pair.into_inner().map(parse_variable).collect()
+    pair.into_inner().map(parse_lvar).collect()
+}
+
+fn parse_lvar(pair: pest::iterators::Pair<Rule>) -> LVar {
+    let mut inner = pair.into_inner();
+    let name = parse_variable(inner.next().unwrap());
+    let label = inner.next().map(parse_hexpr);
+    LVar { name, label }
 }
 
 fn parse_variable(pair: pest::iterators::Pair<Rule>) -> Variable {
@@ -82,8 +102,8 @@ mod tests {
         assert_eq!(
             result,
             Hexpr::Frobenius {
-                sources: vec![Variable("x".to_string())],
-                targets: vec![Variable("x".to_string())],
+                sources: vec![Variable("x".to_string()).into()],
+                targets: vec![Variable("x".to_string()).into()],
             }
         );
     }
@@ -94,8 +114,11 @@ mod tests {
         assert_eq!(
             result,
             Hexpr::Frobenius {
-                sources: vec![Variable("x".to_string()), Variable("x".to_string())],
-                targets: vec![Variable("x".to_string())],
+                sources: vec![
+                    Variable("x".to_string()).into(),
+                    Variable("x".to_string()).into()
+                ],
+                targets: vec![Variable("x".to_string()).into()],
             }
         );
     }
@@ -132,6 +155,51 @@ mod tests {
             Hexpr::Frobenius {
                 sources: vec![],
                 targets: vec![],
+            }
+        );
+    }
+
+    #[test]
+    fn test_empty_composition() {
+        let result = HExprParser::parse_hexpr("()").unwrap();
+        assert_eq!(result, Hexpr::Composition(vec![]));
+    }
+
+    #[test]
+    fn test_empty_tensor() {
+        let result = HExprParser::parse_hexpr("{}").unwrap();
+        assert_eq!(result, Hexpr::Tensor(vec![]));
+    }
+
+    #[test]
+    fn test_hole() {
+        let result = HExprParser::parse_hexpr("_").unwrap();
+        assert_eq!(result, Hexpr::Hole);
+    }
+
+    #[test]
+    fn test_wire() {
+        let result = HExprParser::parse_hexpr("^t").unwrap();
+        assert_eq!(
+            result,
+            Hexpr::Wire(Box::new(Hexpr::Operation(Operation("t".to_string()))))
+        );
+    }
+
+    #[test]
+    fn test_labeled_frobenius_var() {
+        let result = HExprParser::parse_hexpr("[x^t]").unwrap();
+        assert_eq!(
+            result,
+            Hexpr::Frobenius {
+                sources: vec![LVar {
+                    name: Variable("x".to_string()),
+                    label: Some(Hexpr::Operation(Operation("t".to_string()))),
+                }],
+                targets: vec![LVar {
+                    name: Variable("x".to_string()),
+                    label: Some(Hexpr::Operation(Operation("t".to_string()))),
+                }],
             }
         );
     }

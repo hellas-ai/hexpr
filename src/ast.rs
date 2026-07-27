@@ -11,9 +11,13 @@ pub enum Hexpr {
     Tensor(Vec<Hexpr>),
     /// A Frobenius spider
     Frobenius {
-        sources: Vec<Variable>,
-        targets: Vec<Variable>,
+        sources: Vec<LVar>,
+        targets: Vec<LVar>,
     },
+    /// An unlabeled identity wire.
+    Hole,
+    /// A labeled identity wire.
+    Wire(Box<Hexpr>),
     /// A named operation
     Operation(Operation),
 }
@@ -32,6 +36,19 @@ impl Operation {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Variable(pub(crate) String);
 
+/// A variable occurrence in a Frobenius expression, optionally labeled.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LVar {
+    pub name: Variable,
+    pub label: Option<Hexpr>,
+}
+
+impl From<Variable> for LVar {
+    fn from(name: Variable) -> Self {
+        LVar { name, label: None }
+    }
+}
+
 impl std::str::FromStr for Variable {
     type Err = Box<pest::error::Error<Rule>>;
 
@@ -39,6 +56,24 @@ impl std::str::FromStr for Variable {
         let pairs = HExprParser::parse(Rule::variable, s)?;
         let variable_pair = pairs.into_iter().next().unwrap();
         Ok(Variable(variable_pair.as_str().to_string()))
+    }
+}
+
+impl std::str::FromStr for LVar {
+    type Err = crate::parser::ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        crate::parser::HExprParser::parse_lvar(s)
+    }
+}
+
+impl std::fmt::Display for LVar {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name)?;
+        if let Some(label) = &self.label {
+            write!(f, "^{}", label)?;
+        }
+        Ok(())
     }
 }
 
@@ -117,6 +152,8 @@ impl std::fmt::Display for Hexpr {
                     write!(f, "]")
                 }
             }
+            Hexpr::Hole => write!(f, "_"),
+            Hexpr::Wire(label) => write!(f, "^{}", label),
             Hexpr::Operation(name) => write!(f, "{}", name),
         }
     }

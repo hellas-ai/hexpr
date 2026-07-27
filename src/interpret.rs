@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use open_hypergraphs::lax::{Interface, NodeId, OpenHypergraph};
 
-use crate::ast::{Hexpr, Operation, Variable};
+use crate::ast::{Hexpr, LVar, Operation, Variable};
 use thiserror::Error;
 
 #[derive(Debug)]
@@ -21,6 +21,7 @@ pub trait Signature {
     type Error;
 
     fn try_parse_op(&self, op: &Operation) -> Result<Self::Arr, Self::Error>;
+    fn try_parse_object(&self, object: &Hexpr) -> Result<Self::Obj, Self::Error>;
     fn profile(&self, op: &Self::Arr) -> (Vec<Option<Self::Obj>>, Vec<Option<Self::Obj>>);
 }
 
@@ -30,6 +31,8 @@ pub enum Error<E> {
     Composition(Hexpr, Hexpr),
     #[error("Couldn't parse op {0}: {1}")]
     Signature(Operation, E),
+    #[error("Couldn't parse object {0}: {1}")]
+    Object(Hexpr, E),
 }
 
 pub fn try_interpret<S: Signature>(
@@ -118,31 +121,62 @@ fn try_interpret_stack<S: Signature>(
             let (_, interface) = state.new_operation(arr, s, t);
             Ok(interface)
         }
+        Hexpr::Hole => {
+            let node = state.new_node(None);
+            Ok((vec![node], vec![node]))
+        }
+        Hexpr::Wire(label) => {
+            let label = signature
+                .try_parse_object(label)
+                .map_err(|e| Error::Object((**label).clone(), e))?;
+            let node = state.new_node(Some(label));
+            Ok((vec![node], vec![node]))
+        }
         Hexpr::Frobenius { sources, targets } => {
-            let source_nodes = process_frobenius_variables(sources, env, state);
-            let target_nodes = process_frobenius_variables(targets, env, state);
+            let source_nodes = process_frobenius_variables(signature, sources, env, state)?;
+            let target_nodes = process_frobenius_variables(signature, targets, env, state)?;
             Ok((source_nodes, target_nodes))
         }
     }
 }
 
-fn process_frobenius_variables<O, A>(
-    variables: &[Variable],
+fn process_frobenius_variables<S: Signature>(
+    signature: &S,
+    variables: &[LVar],
     env: &mut HashMap<Variable, NodeId>,
-    state: &mut OpenHypergraph<Option<O>, A>,
-) -> Vec<NodeId> {
+    state: &mut OpenHypergraph<Option<S::Obj>, S::Arr>,
+) -> Result<Vec<NodeId>, Error<S::Error>> {
     variables
         .iter()
         .map(|var| {
-            if let Some(&existing_node) = env.get(var) {
-                // Variable already exists - reuse its node (creates unification)
+            let label = var
+                .label
+                .as_ref()
+                .map(|label| {
+                    signature
+                        .try_parse_object(label)
+                        .map_err(|e| Error::Object(label.clone(), e))
+                })
+                .transpose()?;
+
+            let node = if let Some(&existing_node) = env.get(&var.name) {
                 existing_node
             } else {
-                // First occurrence of this variable - create new node with None type
-                let new_node = state.new_node(None);
-                env.insert(var.clone(), new_node);
-                new_node
+                let new_node = state.new_node(label);
+                env.insert(var.name.clone(), new_node);
+                return Ok(new_node);
+            };
+
+            if let Some(label) = label {
+                if state.hypergraph.nodes[node.0].is_none() {
+                    state.hypergraph.nodes[node.0] = Some(label);
+                } else {
+                    let annotation_node = state.new_node(Some(label));
+                    state.unify(node, annotation_node);
+                }
             }
+
+            Ok(node)
         })
         .collect()
 }
