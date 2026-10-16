@@ -22,6 +22,7 @@ pub trait Signature {
 
     fn try_parse_op(&self, op: &Operation) -> Result<Self::Arr, Self::Error>;
     fn try_parse_object(&self, object: &Hexpr) -> Result<Self::Obj, Self::Error>;
+    #[allow(clippy::type_complexity)]
     fn profile(&self, op: &Self::Arr) -> (Vec<Option<Self::Obj>>, Vec<Option<Self::Obj>>);
 }
 
@@ -35,6 +36,7 @@ pub enum Error<E> {
     Object(Hexpr, E),
 }
 
+#[allow(clippy::type_complexity)]
 pub fn try_interpret<S: Signature>(
     signature: &S,
     hexpr: &Hexpr,
@@ -42,6 +44,7 @@ pub fn try_interpret<S: Signature>(
     Ok(try_interpret_with_names(signature, hexpr)?.graph)
 }
 
+#[allow(clippy::type_complexity)]
 pub fn try_interpret_with_names<S: Signature>(
     signature: &S,
     hexpr: &Hexpr,

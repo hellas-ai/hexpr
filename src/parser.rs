@@ -1,3 +1,5 @@
+#![allow(clippy::result_large_err)]
+
 use crate::ast::{Hexpr, LVar, Operation, Variable};
 use pest::Parser;
 use pest_derive::Parser;
