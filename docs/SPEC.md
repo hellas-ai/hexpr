@@ -28,7 +28,7 @@ The `hexpr` grammar is:
     lvars := lvar*
     lvar  := var ("^" hexpr)?            spider node, optionally labeled
 
-    atom  := op-char+                    op-char = alnum | - _ . * + / | > : = ?
+    atom  := op-char+                    op-char = alnum | - _ . * + / | > < : = ?
     var   := (alpha | "-") (alnum | "-" | "_")*
 
 Note:

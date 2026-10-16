@@ -22,7 +22,7 @@ pub enum Hexpr {
     Operation(Operation),
 }
 
-/// Operation names, must match [a-zA-Z0-9-_.*+-/|]+
+/// Operation names consist of alphanumerics or `-_.*+/|><:=!?`.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Operation(pub(crate) String);
 

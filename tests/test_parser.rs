@@ -237,6 +237,19 @@ fn test_names_with_dashes_and_underscores() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_angle_bracket_operations() -> anyhow::Result<()> {
+    assert_eq!(
+        HExprParser::parse_hexpr("<")?,
+        Hexpr::Operation("<".parse()?)
+    );
+    assert_eq!(
+        HExprParser::parse_hexpr(">")?,
+        Hexpr::Operation(">".parse()?)
+    );
+    Ok(())
+}
+
+#[test]
 fn test_whitespace_handling() -> anyhow::Result<()> {
     let result = HExprParser::parse_hexpr("  ( add   sub  )  ").unwrap();
     assert_eq!(
